@@ -20,8 +20,8 @@ export default function MapPage() {
 
   return (
     <Layout className="min-h-screen">
-      <div>
-        
+      <div className='flex flex-col items-center justify-center text-[#003092] text-6xl h-20 pt-6 bg-[#FFF2DB]'>
+       <h2>Choose the location</h2>
       </div>
       <Content className="p-6">
         <Card className="w-full shadow-lg">
