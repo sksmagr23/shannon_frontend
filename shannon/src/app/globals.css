@@ -1,1 +1,26 @@
 @import "tailwindcss";
+
+.ant-layout {
+    background: #f0f2f5;
+  }
+  
+  .ant-layout-header {
+    padding: 0 24px;
+    height: 64px;
+    line-height: 64px;
+  }
+  
+  .ant-card {
+    border-radius: 8px;
+  }
+  
+  .ant-space {
+    width: 100%;
+  }
+  
+  .map-container {
+    height: 70vh;
+    width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+  }
