@@ -12,7 +12,7 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative h-screen flex items-center justify-center px-4 md:px-6">
         <div className="max-w-6xl mx-auto text-center">
-          <motion.h1 
+          <motion.h1
             className="text-5xl md:text-7xl font-bold mb-6"
             style={{ color: "#003092" }}
             initial="hidden"
@@ -22,7 +22,7 @@ export default function Home() {
           >
             Welcome to Shannon
           </motion.h1>
-          <motion.p 
+          <motion.p
             className="text-xl md:text-2xl mb-8"
             style={{ color: "#00879E" }}
             initial="hidden"
@@ -31,10 +31,10 @@ export default function Home() {
             transition={{ duration: 0.5, delay: 0.2 }}
           >
             Renewable energy sources like solar and wind are highly unpredictable due to their
-dependence on weather conditions. This unpredictability can cause fluctuations in energy
-generation, leading to challenges in balancing power supply and demand. Effective
-forecasting is crucial for energy grid stability, reducing reliance on fossil fuel-based backup
-power.
+            dependence on weather conditions. This unpredictability can cause fluctuations in energy
+            generation, leading to challenges in balancing power supply and demand. Effective
+            forecasting is crucial for energy grid stability, reducing reliance on fossil fuel-based backup
+            power.
           </motion.p>
           <motion.button
             className="px-8 py-3 rounded-full text-white text-lg font-semibold"
@@ -54,7 +54,7 @@ power.
       {/* Benefits Section */}
       <section className="py-20 px-4 md:px-6" style={{ backgroundColor: "#003092" }}>
         <div className="max-w-6xl mx-auto">
-          <motion.h2 
+          <motion.h2
             className="text-4xl font-bold text-center mb-16"
             style={{ color: "#FFF2DB" }}
             initial="hidden"
@@ -63,7 +63,7 @@ power.
           >
             Why Choose Shannon?
           </motion.h2>
-          
+
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
