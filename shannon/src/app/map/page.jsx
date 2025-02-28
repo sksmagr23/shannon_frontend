@@ -3,6 +3,7 @@
 import { Layout, Typography, Card, Space } from 'antd';
 import { EnvironmentOutlined } from '@ant-design/icons';
 import MapComponent from '../../../Components/Map/Map';
+import './page.css'; // Import the CSS file
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -19,12 +20,9 @@ export default function MapPage() {
 
   return (
     <Layout className="min-h-screen">
-      <Header className="bg-white shadow-md">
-        <div className="flex items-center">
-          <EnvironmentOutlined className="text-2xl text-blue-500 mr-2" />
-          <Title level={3} className="m-0">Location Map</Title>
-        </div>
-      </Header>
+      <div>
+        
+      </div>
       <Content className="p-6">
         <Card className="w-full shadow-lg">
           <Space direction="vertical" className="w-full">
