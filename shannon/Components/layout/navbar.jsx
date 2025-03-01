@@ -42,7 +42,7 @@ const Navbar = () => {
               </Link>
               {/* Sign In Button */}
               <button
-                className="bg-[#FFAB5B] text-[#003092] px-6 py-2 rounded-full font-semibold hover:bg-transparent border-2 border-[#FFAB5B] transition-all duration-300 ease-in-out shadow-lg"
+                className="bg-[#FFAB4B] text-[#003092] px-6 py-2 rounded-full font-semibold hover:bg-transparent border-2 border-[#FFAB5B] transition-all duration-300 ease-in-out shadow-lg cursor-pointer"
                 onClick={() => setShowSignInModal(true)}
               >
                 Sign In

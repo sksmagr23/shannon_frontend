@@ -290,7 +290,6 @@ export function Component() {
             >
               <Card
                 style={cardStyle}
-                bodyStyle={{ padding: "24px" }}
               >
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
