@@ -3,6 +3,25 @@
 import { Card, Typography, Carousel, Button, Table } from "antd";
 import { TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
+import Groq from "groq-sdk";
+import { useEffect } from "react";
+
+const groq = new Groq({ apiKey: process.env.NEXT_PUBLIC_GROQ_API_KEY, dangerouslyAllowBrowser: true });
+export async function main() {
+  const chatCompletion = await getGroqChatCompletion();
+  console.log(chatCompletion.choices[0]?.message?.content || "");
+}
+export async function getGroqChatCompletion() {
+  return groq.chat.completions.create({
+    messages: [
+      {
+        role: "user",
+        content: "Explain the importance of fast language models",
+      },
+    ],
+    model: "llama-3.3-70b-versatile",
+  });
+}
 
 import {
   CartesianGrid,
@@ -21,6 +40,10 @@ import {
 import { LeftOutlined, RightOutlined } from "@ant-design/icons";
 import { useRef, useState } from "react";
 
+
+useEffect(() => {});
+
+
 const { Title, Text } = Typography;
 
 const BRAND_COLORS = {
@@ -31,11 +54,36 @@ const BRAND_COLORS = {
 };
 
 const chartData = [
-  { browser: "chrome", visitors: 275, fill: BRAND_COLORS.primary },
-  { browser: "safari", visitors: 200, fill: BRAND_COLORS.secondary },
-  { browser: "firefox", visitors: 187, fill: BRAND_COLORS.accent },
-  { browser: "edge", visitors: 173, fill: "#5B9EFF" },
-  { browser: "other", visitors: 90, fill: "#88D4D9" },
+  { day: 1, solar_gen: 275 },
+  { day: 2, solar_gen: 320 },
+  { day: 3, solar_gen: 290 },
+  { day: 4, solar_gen: 305 },
+  { day: 5, solar_gen: 280 },
+  { day: 6, solar_gen: 315 },
+  { day: 7, solar_gen: 330 },
+  { day: 8, solar_gen: 310 },
+  { day: 9, solar_gen: 295 },
+  { day: 10, solar_gen: 340 },
+  { day: 11, solar_gen: 300 },
+  { day: 12, solar_gen: 285 },
+  { day: 13, solar_gen: 325 },
+  { day: 14, solar_gen: 335 },
+  { day: 15, solar_gen: 290 },
+];
+
+const powerGenData = [
+  {
+    name: "Solar",
+    value: 340,
+  },
+  {
+    name: "Wind",
+    value: 280,
+  },
+  {
+    name: "Hydro",
+    value: 250,
+  },
 ];
 
 const COLORS = [
@@ -77,6 +125,15 @@ export function Component() {
   const carouselRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [hoveredRow, setHoveredRow] = useState(null);
+  const [dashboardTitle, setDashboardTitle] = useState(
+    "Browser Usage Analytics Dashboard"
+  );
+  const [dashboardAnalysis, setDashboardAnalysis] = useState({
+    title: "",
+    keyFindings: [],
+    recommendations: [],
+  });
+  const [isLoading, setIsLoading] = useState(true);
 
   const next = () => {
     carouselRef.current.next();
@@ -93,9 +150,9 @@ export function Component() {
       opacity: 1,
       transition: {
         pathLength: { duration: 1.5, ease: "easeInOut" },
-        opacity: { duration: 0.5 }
-      }
-    }
+        opacity: { duration: 0.5 },
+      },
+    },
   };
 
   const dotVariants = {
@@ -104,11 +161,11 @@ export function Component() {
       scale: 1,
       opacity: 1,
       transition: {
-        delay: 1.5 + (custom * 0.1),
+        delay: 1.5 + custom * 0.1,
         duration: 0.4,
-        type: "spring"
-      }
-    })
+        type: "spring",
+      },
+    }),
   };
 
   const pieVariants = {
@@ -119,12 +176,16 @@ export function Component() {
       transition: {
         duration: 0.8,
         delay: 0.3,
-        ease: "easeOut"
-      }
-    }
+        ease: "easeOut",
+      },
+    },
   };
 
-  const CustomLineChart = ({ color, dataKey = "visitors", animationEnabled = true }) => (
+  const CustomLineChart = ({
+    color,
+    dataKey = "solar_gen",
+    animationEnabled = true,
+  }) => (
     <ResponsiveContainer width="100%" height="100%">
       <LineChart
         data={chartData}
@@ -141,13 +202,19 @@ export function Component() {
           stroke="rgba(0,0,0,0.08)"
         />
         <XAxis
-          dataKey="browser"
+          dataKey="day"
           tick={{ fill: BRAND_COLORS.primary }}
           axisLine={{ stroke: BRAND_COLORS.primary, strokeWidth: 1.5 }}
+          label={{ value: "Day", position: "bottom", offset: 0 }}
         />
         <YAxis
           tick={{ fill: BRAND_COLORS.primary }}
           axisLine={{ stroke: BRAND_COLORS.primary, strokeWidth: 1.5 }}
+          label={{
+            value: "Solar Generation (kW)",
+            angle: -90,
+            position: "insideLeft",
+          }}
         />
         <Tooltip
           contentStyle={{
@@ -157,7 +224,8 @@ export function Component() {
             borderRadius: "8px",
           }}
           labelStyle={{ color: BRAND_COLORS.primary, fontWeight: "bold" }}
-          formatter={(value) => [`${value} visitors`, "Visitors"]}
+          formatter={(value) => [`${value} kW`, "Solar Generation"]}
+          labelFormatter={(value) => `Day ${value}`}
         />
         <Legend
           iconType="circle"
@@ -165,6 +233,7 @@ export function Component() {
           wrapperStyle={{ paddingTop: 20 }}
         />
         <Line
+          name="Solar Generation"
           dataKey={dataKey}
           type="monotone"
           stroke={color}
@@ -178,18 +247,12 @@ export function Component() {
             stroke: "#FFFFFF",
             filter: "drop-shadow(0px 2px 4px rgba(0,0,0,0.3))",
           }}
-          dot={({ payload, index, ...props }) => (
-            <Dot
-              key={`${payload.browser}-${index}`}
-              r={5}
-              cx={props.cx}
-              cy={props.cy}
-              fill={color}
-              stroke="#FFFFFF"
-              strokeWidth={2}
-              filter="drop-shadow(0px 2px 3px rgba(0,0,0,0.2))"
-            />
-          )}
+          dot={{
+            r: 5,
+            fill: color,
+            stroke: "#FFFFFF",
+            strokeWidth: 2,
+          }}
           filter="drop-shadow(0px 3px 3px rgba(0,0,0,0.2))"
         />
       </LineChart>
@@ -198,14 +261,15 @@ export function Component() {
 
   const cardStyle = {
     background: `linear-gradient(135deg, #FFFFFF, ${BRAND_COLORS.background})`,
-    boxShadow: '0 10px 40px rgba(0, 48, 146, 0.08), 0 4px 12px rgba(0, 135, 158, 0.05)',
-    borderRadius: '16px',
+    boxShadow:
+      "0 10px 40px rgba(0, 48, 146, 0.08), 0 4px 12px rgba(0, 135, 158, 0.05)",
+    borderRadius: "16px",
     width: "100%",
     margin: "0 auto",
-    overflow: 'hidden',
-    position: 'relative',
+    overflow: "hidden",
+    position: "relative",
     zIndex: 10,
-    border: 'none'
+    border: "none",
   };
 
   const buttonStyle = (position) => ({
@@ -222,16 +286,157 @@ export function Component() {
     background: `rgba(255, 255, 255, 0.9)`,
     boxShadow: `0 4px 12px rgba(0, 48, 146, 0.15)`,
     border: `1px solid ${BRAND_COLORS.secondary}15`,
-    borderRadius: '50%',
-    transition: 'all 0.3s ease',
+    borderRadius: "50%",
+    transition: "all 0.3s ease",
     ":hover": {
       background: `${BRAND_COLORS.background}`,
       transform: "translateY(-50%) scale(1.05)",
-    }
+    },
   });
 
+  async function getDashboardInsights() {
+    try {
+      const prompt = `
+        Analyze this browser usage data:
+        ${JSON.stringify({
+          chartData,
+          browserData: [
+            {
+              browser: "Chrome",
+              visitors: 275,
+              share: "29.8%",
+              trend: "+5.2%",
+            },
+            {
+              browser: "Safari",
+              visitors: 200,
+              share: "21.7%",
+              trend: "+3.8%",
+            },
+            {
+              browser: "Firefox",
+              visitors: 187,
+              share: "20.3%",
+              trend: "-1.2%",
+            },
+            { browser: "Edge", visitors: 173, share: "18.8%", trend: "+2.5%" },
+            { browser: "Other", visitors: 90, share: "9.4%", trend: "-0.8%" },
+          ],
+        })}
+
+        Generate:
+        1. A dashboard title that highlights key trends
+        2. 4 key findings about browser usage patterns
+        3. 4 actionable recommendations for optimization
+        
+        Format response as JSON with fields:
+        {
+          "title": "string",
+          "keyFindings": ["string"],
+          "recommendations": ["string"]
+        }
+      `;
+
+      const chatCompletion = await groq.chat.completions.create({
+        messages: [{ role: "user", content: prompt }],
+        model: "llama-3.3-70b-versatile",
+        temperature: 0.7,
+        maxTokens: 1000,
+      });
+
+      const response = JSON.parse(
+        chatCompletion.choices[0]?.message?.content || "{}"
+      );
+      return response;
+    } catch (error) {
+      console.error("Error getting dashboard insights:", error);
+      return {
+        title: "Browser Usage Analytics Dashboard",
+        keyFindings: [],
+        recommendations: [],
+      };
+    }
+  }
+
+  useEffect(() => {
+    async function updateDashboardContent() {
+      setIsLoading(true);
+      try {
+        const insights = await getDashboardInsights();
+        setDashboardTitle(insights.title);
+        setDashboardAnalysis(insights);
+      } catch (error) {
+        console.error("Error updating dashboard:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    updateDashboardContent();
+  }, []);
+
+  useEffect(() => {
+    async function fetchAnalysis() {
+      setIsLoading(true);
+      try {
+        const response = await fetch('/api/analysis', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            chartData,
+            browserData: [
+              { browser: 'Chrome', visitors: 275, share: '29.8%', trend: '+5.2%' },
+              { browser: 'Safari', visitors: 200, share: '21.7%', trend: '+3.8%' },
+              { browser: 'Firefox', visitors: 187, share: '20.3%', trend: '-1.2%' },
+              { browser: 'Edge', visitors: 173, share: '18.8%', trend: '+2.5%' },
+              { browser: 'Other', visitors: 90, share: '9.4%', trend: '-0.8%' }
+            ]
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
+        setDashboardAnalysis({
+          keyFindings: data.keyFindings || [],
+          recommendations: data.recommendations || []
+        });
+      } catch (error) {
+        console.error('Error fetching analysis:', error);
+        setDashboardAnalysis({
+          keyFindings: [
+            "Chrome leads with 29.8% market share",
+            "Safari shows strong growth at 21.7%",
+            "Firefox experiencing slight decline",
+            "Edge maintains steady growth"
+          ],
+          recommendations: [
+            "Optimize for Chrome compatibility",
+            "Enhance Safari performance",
+            "Investigate Firefox decline",
+            "Continue Edge support"
+          ]
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchAnalysis();
+  }, []);
+
   return (
-    <div style={{ padding: "16px", background: BRAND_COLORS.background, minHeight: "100vh" }}>
+    <div
+      style={{
+        padding: "16px",
+        background: BRAND_COLORS.background,
+        minHeight: "100vh",
+      }}
+    >
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -243,10 +448,10 @@ export function Component() {
             textAlign: "center",
             marginBottom: "24px",
             color: BRAND_COLORS.primary,
-            fontWeight: 600
+            fontWeight: 600,
           }}
         >
-          Browser Usage Analytics Dashboard
+          {dashboardTitle}
         </Title>
       </motion.div>
 
@@ -273,13 +478,13 @@ export function Component() {
             background: BRAND_COLORS.secondary + "50",
             borderRadius: "4px",
             width: "20px",
-            height: "6px"
+            height: "6px",
           }}
           activeDotStyle={{
             background: BRAND_COLORS.primary,
             borderRadius: "4px",
             width: "30px",
-            height: "6px"
+            height: "6px",
           }}
         >
           <div>
@@ -288,15 +493,15 @@ export function Component() {
               animate="visible"
               transition={{ duration: 0.5 }}
             >
-              <Card
-                style={cardStyle}
-              >
+              <Card style={cardStyle}>
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <Title level={3} style={{ color: BRAND_COLORS.primary }}>Browser Visitors Trend</Title>
+                  <Title level={3} style={{ color: BRAND_COLORS.primary }}>
+                    Browser Visitors Trend
+                  </Title>
                   <Text type="secondary">January - June 2024</Text>
                 </motion.div>
                 <div
@@ -318,16 +523,18 @@ export function Component() {
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "flex-start",
-                    gap: "8px"
+                    gap: "8px",
                   }}
                 >
-                  <div style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    fontWeight: 500,
-                    color: "#52c41a"
-                  }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      fontWeight: 500,
+                      color: "#52c41a",
+                    }}
+                  >
                     Trending up by 5.2% this month <TrendingUp size={16} />
                   </div>
                   <div style={{ color: "rgba(0, 0, 0, 0.45)" }}>
@@ -344,16 +551,15 @@ export function Component() {
               animate={activeIndex === 1 ? "visible" : "hidden"}
               transition={{ duration: 0.5 }}
             >
-              <Card
-                style={cardStyle}
-                bodyStyle={{ padding: "24px" }}
-              >
+              <Card style={cardStyle} bodyStyle={{ padding: "24px" }}>
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <Title level={3} style={{ color: BRAND_COLORS.secondary }}>Market Penetration</Title>
+                  <Title level={3} style={{ color: BRAND_COLORS.secondary }}>
+                    Market Penetration
+                  </Title>
                   <Text type="secondary">January - June 2024</Text>
                 </motion.div>
                 <div
@@ -375,16 +581,18 @@ export function Component() {
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "flex-start",
-                    gap: "8px"
+                    gap: "8px",
                   }}
                 >
-                  <div style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    fontWeight: 500,
-                    color: "#52c41a"
-                  }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      fontWeight: 500,
+                      color: "#52c41a",
+                    }}
+                  >
                     Trending up by 5.2% this month <TrendingUp size={16} />
                   </div>
                   <div style={{ color: "rgba(0, 0, 0, 0.45)" }}>
@@ -401,16 +609,15 @@ export function Component() {
               animate={activeIndex === 2 ? "visible" : "hidden"}
               transition={{ duration: 0.5 }}
             >
-              <Card
-                style={cardStyle}
-                bodyStyle={{ padding: "24px" }}
-              >
+              <Card style={cardStyle} bodyStyle={{ padding: "24px" }}>
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <Title level={3} style={{ color: BRAND_COLORS.accent }}>User Engagement Metrics</Title>
+                  <Title level={3} style={{ color: BRAND_COLORS.accent }}>
+                    User Engagement Metrics
+                  </Title>
                   <Text type="secondary">January - June 2024</Text>
                 </motion.div>
                 <div
@@ -432,16 +639,18 @@ export function Component() {
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "flex-start",
-                    gap: "8px"
+                    gap: "8px",
                   }}
                 >
-                  <div style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    fontWeight: 500,
-                    color: "#52c41a"
-                  }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      fontWeight: 500,
+                      color: "#52c41a",
+                    }}
+                  >
                     Trending up by 5.2% this month <TrendingUp size={16} />
                   </div>
                   <div style={{ color: "rgba(0, 0, 0, 0.45)" }}>
@@ -458,16 +667,15 @@ export function Component() {
               animate={activeIndex === 3 ? "visible" : "hidden"}
               variants={pieVariants}
             >
-              <Card
-                style={cardStyle}
-                bodyStyle={{ padding: "24px" }}
-              >
+              <Card style={cardStyle} bodyStyle={{ padding: "24px" }}>
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <Title level={3} style={{ color: BRAND_COLORS.primary }}>Browser Distribution</Title>
+                  <Title level={3} style={{ color: BRAND_COLORS.primary }}>
+                    Browser Distribution
+                  </Title>
                   <Text type="secondary">January - June 2024</Text>
                 </motion.div>
                 <div
@@ -487,7 +695,10 @@ export function Component() {
                           border: "none",
                           borderRadius: "8px",
                         }}
-                        formatter={(value, name) => [`${value} visitors (${Math.round(value / 925 * 100)}%)`, name]}
+                        formatter={(value, name) => [
+                          `${value} kW (${Math.round((value / 870) * 100)}%)`,
+                          name,
+                        ]}
                       />
                       <Legend
                         iconType="circle"
@@ -496,9 +707,9 @@ export function Component() {
                         align="center"
                       />
                       <Pie
-                        data={chartData}
-                        dataKey="visitors"
-                        nameKey="browser"
+                        data={powerGenData}
+                        dataKey="value"
+                        nameKey="name"
                         cx="50%"
                         cy="50%"
                         outerRadius={160}
@@ -512,9 +723,8 @@ export function Component() {
                           `${name} ${(percent * 100).toFixed(0)}%`
                         }
                         labelLine={false}
-                        filter="drop-shadow(2px 4px 6px rgba(0,0,0,0.2))"
                       >
-                        {chartData.map((entry, index) => (
+                        {powerGenData.map((entry, index) => (
                           <Cell
                             key={`cell-${index}`}
                             fill={COLORS[index % COLORS.length]}
@@ -535,16 +745,18 @@ export function Component() {
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "flex-start",
-                    gap: "8px"
+                    gap: "8px",
                   }}
                 >
-                  <div style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    fontWeight: 500,
-                    color: BRAND_COLORS.primary
-                  }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      fontWeight: 500,
+                      color: BRAND_COLORS.primary,
+                    }}
+                  >
                     Browser Distribution Analysis
                   </div>
                   <div style={{ color: "rgba(0, 0, 0, 0.45)" }}>
@@ -559,28 +771,36 @@ export function Component() {
         <Button
           type="text"
           shape="circle"
-          icon={<LeftOutlined style={{ fontSize: "16px", color: BRAND_COLORS.primary }} />}
+          icon={
+            <LeftOutlined
+              style={{ fontSize: "16px", color: BRAND_COLORS.primary }}
+            />
+          }
           onClick={previous}
           style={{
             ...buttonStyle("left"),
-            ':hover': {
+            ":hover": {
               background: BRAND_COLORS.background,
               color: BRAND_COLORS.primary,
-            }
+            },
           }}
           className="carousel-button"
         />
         <Button
           type="text"
           shape="circle"
-          icon={<RightOutlined style={{ fontSize: "16px", color: BRAND_COLORS.primary }} />}
+          icon={
+            <RightOutlined
+              style={{ fontSize: "16px", color: BRAND_COLORS.primary }}
+            />
+          }
           onClick={next}
           style={{
             ...buttonStyle("right"),
-            ':hover': {
+            ":hover": {
               background: BRAND_COLORS.background,
               color: BRAND_COLORS.primary,
-            }
+            },
           }}
           className="carousel-button"
         />
@@ -595,10 +815,11 @@ export function Component() {
         <Card
           style={{
             background: `linear-gradient(135deg, #FFFFFF, ${BRAND_COLORS.background})`,
-            boxShadow: '0 10px 40px rgba(0, 48, 146, 0.08), 0 4px 12px rgba(0, 135, 158, 0.05)',
-            borderRadius: '16px',
-            overflow: 'hidden',
-            border: 'none'
+            boxShadow:
+              "0 10px 40px rgba(0, 48, 146, 0.08), 0 4px 12px rgba(0, 135, 158, 0.05)",
+            borderRadius: "16px",
+            overflow: "hidden",
+            border: "none",
           }}
           bodyStyle={{ padding: "24px" }}
         >
@@ -607,105 +828,124 @@ export function Component() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4, duration: 0.5 }}
           >
-            <Title level={3} style={{ color: BRAND_COLORS.primary, marginBottom: "24px" }}>
+            <Title
+              level={3}
+              style={{ color: BRAND_COLORS.primary, marginBottom: "24px" }}
+            >
               Browser Market Analysis
             </Title>
 
             <Table
               dataSource={[
                 {
-                  key: '1',
-                  browser: 'Chrome',
+                  key: "1",
+                  browser: "Chrome",
                   visitors: 275,
-                  share: '29.8%',
-                  trend: '+5.2%',
-                  status: 'up',
-                  color: BRAND_COLORS.primary
+                  share: "29.8%",
+                  trend: "+5.2%",
+                  status: "up",
+                  color: BRAND_COLORS.primary,
                 },
                 {
-                  key: '2',
-                  browser: 'Safari',
+                  key: "2",
+                  browser: "Safari",
                   visitors: 200,
-                  share: '21.7%',
-                  trend: '+3.8%',
-                  status: 'up',
-                  color: BRAND_COLORS.secondary
+                  share: "21.7%",
+                  trend: "+3.8%",
+                  status: "up",
+                  color: BRAND_COLORS.secondary,
                 },
                 {
-                  key: '3',
-                  browser: 'Firefox',
+                  key: "3",
+                  browser: "Firefox",
                   visitors: 187,
-                  share: '20.3%',
-                  trend: '-1.2%',
-                  status: 'down',
-                  color: BRAND_COLORS.accent
+                  share: "20.3%",
+                  trend: "-1.2%",
+                  status: "down",
+                  color: BRAND_COLORS.accent,
                 },
                 {
-                  key: '4',
-                  browser: 'Edge',
+                  key: "4",
+                  browser: "Edge",
                   visitors: 173,
-                  share: '18.8%',
-                  trend: '+2.5%',
-                  status: 'up',
-                  color: '#5B9EFF'
+                  share: "18.8%",
+                  trend: "+2.5%",
+                  status: "up",
+                  color: "#5B9EFF",
                 },
                 {
-                  key: '5',
-                  browser: 'Other',
+                  key: "5",
+                  browser: "Other",
                   visitors: 90,
-                  share: '9.4%',
-                  trend: '-0.8%',
-                  status: 'down',
-                  color: '#88D4D9'
+                  share: "9.4%",
+                  trend: "-0.8%",
+                  status: "down",
+                  color: "#88D4D9",
                 },
               ]}
               columns={[
                 {
-                  title: 'Browser',
-                  dataIndex: 'browser',
-                  key: 'browser',
+                  title: "Browser",
+                  dataIndex: "browser",
+                  key: "browser",
                   render: (text, record) => (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div style={{
-                        width: '12px',
-                        height: '12px',
-                        borderRadius: '4px',
-                        backgroundColor: record.color,
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                      }} />
-                      <span style={{ fontWeight: 600, color: BRAND_COLORS.primary }}>{text}</span>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "12px",
+                          height: "12px",
+                          borderRadius: "4px",
+                          backgroundColor: record.color,
+                          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                        }}
+                      />
+                      <span
+                        style={{ fontWeight: 600, color: BRAND_COLORS.primary }}
+                      >
+                        {text}
+                      </span>
                     </div>
-                  )
+                  ),
                 },
                 {
-                  title: 'Visitors',
-                  dataIndex: 'visitors',
-                  key: 'visitors',
+                  title: "Visitors",
+                  dataIndex: "visitors",
+                  key: "visitors",
                   render: (text) => (
-                    <span style={{ fontWeight: 600 }}>{text.toLocaleString()}</span>
-                  )
+                    <span style={{ fontWeight: 600 }}>
+                      {text.toLocaleString()}
+                    </span>
+                  ),
                 },
                 {
-                  title: 'Market Share',
-                  dataIndex: 'share',
-                  key: 'share',
+                  title: "Market Share",
+                  dataIndex: "share",
+                  key: "share",
                   render: (text) => (
-                    <div style={{
-                      background: `${BRAND_COLORS.background}`,
-                      padding: '6px 14px',
-                      borderRadius: '12px',
-                      display: 'inline-block',
-                      fontWeight: 500,
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-                    }}>
+                    <div
+                      style={{
+                        background: `${BRAND_COLORS.background}`,
+                        padding: "6px 14px",
+                        borderRadius: "12px",
+                        display: "inline-block",
+                        fontWeight: 500,
+                        boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                      }}
+                    >
                       {text}
                     </div>
-                  )
+                  ),
                 },
                 {
-                  title: 'Trend',
-                  dataIndex: 'trend',
-                  key: 'trend',
+                  title: "Trend",
+                  dataIndex: "trend",
+                  key: "trend",
                   render: (text, record) => (
                     <motion.div
                       initial={{ scale: 0.9 }}
@@ -715,13 +955,14 @@ export function Component() {
                     >
                       <Text
                         style={{
-                          color: record.status === 'up' ? '#52c41a' : '#ff4d4f',
+                          color: record.status === "up" ? "#52c41a" : "#ff4d4f",
                           fontWeight: 600,
-                          padding: '6px 14px',
-                          background: record.status === 'up' ? '#f6ffed' : '#fff2f0',
-                          borderRadius: '12px',
-                          display: 'inline-block',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                          padding: "6px 14px",
+                          background:
+                            record.status === "up" ? "#f6ffed" : "#fff2f0",
+                          borderRadius: "12px",
+                          display: "inline-block",
+                          boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
                         }}
                       >
                         {text}
@@ -735,18 +976,22 @@ export function Component() {
                 onMouseEnter: () => setHoveredRow(index),
                 onMouseLeave: () => setHoveredRow(null),
                 style: {
-                  background: hoveredRow === index ? `${BRAND_COLORS.background}50` : undefined,
-                  transition: 'background 0.3s ease',
-                  cursor: 'pointer',
-                  borderRadius: '8px',
-                  transform: hoveredRow === index ? 'translateX(5px)' : undefined,
+                  background:
+                    hoveredRow === index
+                      ? `${BRAND_COLORS.background}50`
+                      : undefined,
+                  transition: "background 0.3s ease",
+                  cursor: "pointer",
+                  borderRadius: "8px",
+                  transform:
+                    hoveredRow === index ? "translateX(5px)" : undefined,
                 },
               })}
               rowClassName={() => "browser-row"}
             />
           </motion.div>
 
-          <div style={{ marginTop: '40px', display: 'flex', gap: '24px' }}>
+          <div style={{ marginTop: "40px", display: "flex", gap: "24px" }}>
             <motion.div
               style={{ flex: 1 }}
               initial={{ opacity: 0, y: 20 }}
@@ -756,52 +1001,53 @@ export function Component() {
             >
               <Card
                 title={
-                  <div style={{
-                    fontSize: '18px',
-                    fontWeight: 600,
-                    background: `linear-gradient(45deg, ${BRAND_COLORS.primary}, ${BRAND_COLORS.secondary})`,
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent'
-                  }}>
+                  <div
+                    style={{
+                      fontSize: "18px",
+                      fontWeight: 600,
+                      background: `linear-gradient(45deg, ${BRAND_COLORS.primary}, ${BRAND_COLORS.secondary})`,
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                    }}
+                  >
                     Key Findings
                   </div>
                 }
                 style={{
-                  height: '100%',
-                  boxShadow: '0 8px 24px rgba(0, 48, 146, 0.06), 0 2px 8px rgba(0, 135, 158, 0.04)',
-                  borderRadius: '12px',
-                  border: 'none'
+                  height: "100%",
+                  boxShadow:
+                    "0 8px 24px rgba(0, 48, 146, 0.06), 0 2px 8px rgba(0, 135, 158, 0.04)",
+                  borderRadius: "12px",
+                  border: "none",
                 }}
               >
-                <motion.ul style={{ listStyleType: 'none', padding: 0 }}>
-                  {[
-                    'Chrome maintains market leadership with nearly 30% share',
-                    'Safari shows strong growth in user adoption',
-                    'Firefox experiencing slight decline in market share',
-                    'Edge showing steady growth in user base'
-                  ].map((item, index) => (
+                <motion.ul style={{ listStyleType: "none", padding: 0 }}>
+                  {dashboardAnalysis.keyFindings.map((item, index) => (
                     <motion.li
                       key={index}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.7 + (index * 0.1), duration: 0.3 }}
+                      transition={{ delay: 0.7 + index * 0.1, duration: 0.3 }}
                       whileHover={{ x: 5, color: BRAND_COLORS.primary }}
                       style={{
-                        padding: '12px 0',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        borderBottom: index < 3 ? '1px solid rgba(0,0,0,0.06)' : 'none',
-                        transition: 'all 0.3s ease'
+                        padding: "12px 0",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                        borderBottom:
+                          index < 3 ? "1px solid rgba(0,0,0,0.06)" : "none",
+                        transition: "all 0.3s ease",
                       }}
                     >
-                      <div style={{
-                        width: '8px',
-                        height: '8px',
-                        borderRadius: '2px',
-                        backgroundColor: BRAND_COLORS.primary,
-                        transform: 'rotate(45deg)'
-                      }} />
+                      <div
+                        style={{
+                          width: "8px",
+                          height: "8px",
+                          borderRadius: "2px",
+                          backgroundColor: BRAND_COLORS.primary,
+                          transform: "rotate(45deg)",
+                        }}
+                      />
                       {item}
                     </motion.li>
                   ))}
@@ -818,52 +1064,53 @@ export function Component() {
             >
               <Card
                 title={
-                  <div style={{
-                    fontSize: '18px',
-                    fontWeight: 600,
-                    background: `linear-gradient(45deg, ${BRAND_COLORS.secondary}, ${BRAND_COLORS.accent})`,
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent'
-                  }}>
+                  <div
+                    style={{
+                      fontSize: "18px",
+                      fontWeight: 600,
+                      background: `linear-gradient(45deg, ${BRAND_COLORS.secondary}, ${BRAND_COLORS.accent})`,
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                    }}
+                  >
                     Recommendations
                   </div>
                 }
                 style={{
-                  height: '100%',
-                  boxShadow: '0 8px 24px rgba(0, 48, 146, 0.06), 0 2px 8px rgba(0, 135, 158, 0.04)',
-                  borderRadius: '12px',
-                  border: 'none'
+                  height: "100%",
+                  boxShadow:
+                    "0 8px 24px rgba(0, 48, 146, 0.06), 0 2px 8px rgba(0, 135, 158, 0.04)",
+                  borderRadius: "12px",
+                  border: "none",
                 }}
               >
-                <motion.ul style={{ listStyleType: 'none', padding: 0 }}>
-                  {[
-                    'Optimize website performance for Chrome and Safari',
-                    'Monitor Firefox user experience for potential issues',
-                    'Consider enhanced testing on Edge platform',
-                    'Maintain broad browser compatibility'
-                  ].map((item, index) => (
+                <motion.ul style={{ listStyleType: "none", padding: 0 }}>
+                  {dashboardAnalysis.recommendations.map((item, index) => (
                     <motion.li
                       key={index}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.8 + (index * 0.1), duration: 0.3 }}
+                      transition={{ delay: 0.8 + index * 0.1, duration: 0.3 }}
                       whileHover={{ x: 5, color: BRAND_COLORS.secondary }}
                       style={{
-                        padding: '12px 0',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        borderBottom: index < 3 ? '1px solid rgba(0,0,0,0.06)' : 'none',
-                        transition: 'all 0.3s ease'
+                        padding: "12px 0",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        borderBottom:
+                          index < 3 ? "1px solid rgba(0,0,0,0.06)" : "none",
+                        transition: "all 0.3s ease",
                       }}
                     >
-                      <div style={{
-                        width: '8px',
-                        height: '8px',
-                        borderRadius: '2px',
-                        backgroundColor: BRAND_COLORS.secondary,
-                        transform: 'rotate(45deg)'
-                      }} />
+                      <div
+                        style={{
+                          width: "8px",
+                          height: "8px",
+                          borderRadius: "2px",
+                          backgroundColor: BRAND_COLORS.secondary,
+                          transform: "rotate(45deg)",
+                        }}
+                      />
                       {item}
                     </motion.li>
                   ))}

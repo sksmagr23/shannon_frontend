@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { motion } from 'framer-motion';
+import axios from "axios";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
@@ -14,6 +15,13 @@ const MapComponent = ({ center, onLocationClick }) => {
   const [isHovering, setIsHovering] = useState(false);
 
 
+  const handleDashboard = async() => {
+    const latitude = clickedLocation.lat.toFixed(6);
+    const longitude = clickedLocation.lng.toFixed(6);
+    const respones = axios.post('http://localhost:8000/api/dashboard/add/', {latitude, longitude});
+    console.log('Response:', respones.data);
+    window.location.href = "/dashboard";
+  }
   const getCityName = async (lng, lat) => {
     try {
       const response = await fetch(
@@ -166,6 +174,7 @@ const MapComponent = ({ center, onLocationClick }) => {
               >
                 <motion.span
                   className="absolute inset-0 flex items-center justify-center"
+                  onClick={() => handleDashboard()}
                   initial={false}
                   animate={{
                     y: isHovering ? -30 : 0,
@@ -177,6 +186,7 @@ const MapComponent = ({ center, onLocationClick }) => {
                 </motion.span>
                 <motion.span
                   className="absolute inset-0 flex items-center justify-center"
+                  onClick={() => handleDashboard()}
                   initial={false}
                   animate={{
                     y: isHovering ? 0 : 30,
