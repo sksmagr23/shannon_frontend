@@ -21,7 +21,7 @@ const MapComponent = ({ center, onLocationClick }) => {
       );
       const data = await response.json();
       if (data.features && data.features.length > 0) {
-        return data.features[0].text; // Returns the city name
+        return data.features[0].text;
       }
       return 'Unknown Location';
     } catch (error) {
@@ -95,101 +95,104 @@ const MapComponent = ({ center, onLocationClick }) => {
     }
   };
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="p-6"
-      style={{ backgroundColor: "#FFF2DB", borderRadius: "20px" }}
-    >
+    return (
       <motion.div
-        ref={mapContainer}
-        style={{
-          height: '500px',
-          width: '100%',
-          borderRadius: '15px',
-          overflow: 'hidden',
-          border: '3px solid #003092'
-        }}
-        whileHover={{
-          boxShadow: '0px 0px 25px rgba(0,135,158,0.3)',
-        }}
-      />
-      {clickedLocation && (
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="p-3 sm:p-5" 
+        style={{ backgroundColor: "#FFF2DB", borderRadius: "20px" }}
+      >
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.2 }}
-          className="mt-6 p-6 rounded-xl"
+          ref={mapContainer}
           style={{
-            backgroundColor: "#003092",
-            color: "#FFF2DB"
+            height: '450px',
+            width: '100%',
+            borderRadius: '15px',
+            overflow: 'hidden',
+            border: '3px solid #003092',
+            '@media (minWidth: 640px)': {
+              height: '600px',
+            },
           }}
-        >
-          <h3 className="text-2xl font-bold mb-4 text-center" style={{ color: "#FFAB5B" }}>
-            Selected Location
-          </h3>
-
-          <div className="grid grid-cols-3 gap-4 mb-6">
-            <div className="p-4 rounded-lg" style={{ backgroundColor: "rgba(0,135,158,0.2)" }}>
-              <p className="text-sm opacity-80">City</p>
-              <p className="text-xl font-semibold">{clickedLocation.cityName}</p>
+          whileHover={{
+            boxShadow: '0px 0px 25px rgba(0,135,158,0.3)',
+          }}
+        />
+        {clickedLocation && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.2 }}
+            className="mt-4 sm:mt-6 p-4 sm:p-6 rounded-xl"
+            style={{
+              backgroundColor: "#003092",
+              color: "#FFF2DB"
+            }}
+          >
+            <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-center" style={{ color: "#FFAB5B" }}>
+              Selected Location
+            </h3>
+    
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
+              <div className="p-3 sm:p-4 rounded-lg" style={{ backgroundColor: "rgba(0,135,158,0.2)" }}>
+                <p className="text-xs sm:text-sm opacity-80">City</p>
+                <p className="text-lg sm:text-xl font-semibold">{clickedLocation.cityName}</p>
+              </div>
+              <div className="p-3 sm:p-4 rounded-lg" style={{ backgroundColor: "rgba(0,135,158,0.2)" }}>
+                <p className="text-xs sm:text-sm opacity-80">Latitude</p>
+                <p className="text-lg sm:text-xl font-semibold">{clickedLocation.lat.toFixed(6)}°</p>
+              </div>
+              <div className="p-3 sm:p-4 rounded-lg" style={{ backgroundColor: "rgba(0,135,158,0.2)" }}>
+                <p className="text-xs sm:text-sm opacity-80">Longitude</p>
+                <p className="text-lg sm:text-xl font-semibold">{clickedLocation.lng.toFixed(6)}°</p>
+              </div>
             </div>
-            <div className="p-4 rounded-lg" style={{ backgroundColor: "rgba(0,135,158,0.2)" }}>
-              <p className="text-sm opacity-80">Latitude</p>
-              <p className="text-xl font-semibold">{clickedLocation.lat.toFixed(6)}°</p>
-            </div>
-            <div className="p-4 rounded-lg" style={{ backgroundColor: "rgba(0,135,158,0.2)" }}>
-              <p className="text-sm opacity-80">Longitude</p>
-              <p className="text-xl font-semibold">{clickedLocation.lng.toFixed(6)}°</p>
-            </div>
-          </div>
-          <div className="flex justify-center">
-            <motion.button
-              whileHover={{
-                scale: 1.02,
-                backgroundColor: "#FFAB5B",
-              }}
-              whileTap={{ scale: 0.98 }}
-              onHoverStart={() => setIsHovering(true)}
-              onHoverEnd={() => setIsHovering(false)}
-              className="w-[50%] py-4 rounded-xl font-bold text-lg transition-all duration-300 relative overflow-hidden"
-              style={{
-                backgroundColor: "#00879E",
-                color: "#FFF2DB"
-              }}
-              onClick={handleSelectLocation}
-            >
-              <motion.span
-                className="absolute inset-0 flex items-center justify-center"
-                initial={false}
-                animate={{
-                  y: isHovering ? -30 : 0,
-                  opacity: isHovering ? 0 : 1
+            <div className="flex justify-center">
+              <motion.button
+                whileHover={{
+                  scale: 1.02,
+                  backgroundColor: "#FFAB5B",
                 }}
-                transition={{ duration: 0.3 }}
-              >
-                Analyze
-              </motion.span>
-              <motion.span
-                className="absolute inset-0 flex items-center justify-center"
-                initial={false}
-                animate={{
-                  y: isHovering ? 0 : 30,
-                  opacity: isHovering ? 1 : 0
+                whileTap={{ scale: 0.98 }}
+                onHoverStart={() => setIsHovering(true)}
+                onHoverEnd={() => setIsHovering(false)}
+                className="w-full sm:w-[50%] py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg transition-all duration-300 relative overflow-hidden"
+                style={{
+                  backgroundColor: "#00879E",
+                  color: "#FFF2DB"
                 }}
-                transition={{ duration: 0.3 }}
-                style={{ color: "#003092" }}
+                onClick={handleSelectLocation}
               >
-                Let's Go! 🚀
-              </motion.span>
-            </motion.button>
-          </div>
-        </motion.div>
-      )}
-    </motion.div>
-  );
+                <motion.span
+                  className="absolute inset-0 flex items-center justify-center"
+                  initial={false}
+                  animate={{
+                    y: isHovering ? -30 : 0,
+                    opacity: isHovering ? 0 : 1
+                  }}
+                  transition={{ duration: 0.3 }}
+                >
+                  Analyze
+                </motion.span>
+                <motion.span
+                  className="absolute inset-0 flex items-center justify-center"
+                  initial={false}
+                  animate={{
+                    y: isHovering ? 0 : 30,
+                    opacity: isHovering ? 1 : 0
+                  }}
+                  transition={{ duration: 0.3 }}
+                  style={{ color: "#003092" }}
+                >
+                  Let's Go! 🚀
+                </motion.span>
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
+      </motion.div>
+    );
 };
 
 export default MapComponent;

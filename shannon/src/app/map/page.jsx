@@ -1,10 +1,7 @@
 'use client';
-
 import { Layout, Typography, Card, Space } from 'antd';
-import { EnvironmentOutlined } from '@ant-design/icons';
 import MapComponent from '../../../Components/Map/Map';
-import './page.css'; // Import the CSS file
-
+import './page.css';
 const { Header, Content } = Layout;
 const { Title } = Typography;
 
@@ -20,10 +17,10 @@ export default function MapPage() {
 
   return (
     <Layout className="min-h-screen">
-      <div className='flex flex-col items-center justify-center text-[#003092] text-6xl h-20 pt-6 bg-[#FFF2DB]'>
+      <div className='flex flex-col items-center justify-center text-[#003092] text-2xl md:text-4xl lg:text-6xl h-24 md:h-20 pt-4 md:pt-6 bg-[#FFF2DB]'>
        <h2>Choose the location</h2>
       </div>
-      <Content className="p-6">
+      <Content className="p-2 md:p-4 lg:p-6 bg-black">
         <Card className="w-full shadow-lg">
           <Space direction="vertical" className="w-full">
             <MapComponent 
