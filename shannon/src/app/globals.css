@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+body {
+    font-family: 'Montserrat', Arial, sans-serif;
+    background-color: #000; /* Black background for a clean look */
+    color: #fff; /* White text for contrast */
+  }
+
 .ant-layout {
     background: #f0f2f5;
   }
