@@ -37,10 +37,10 @@ const FeatureCard = ({ icon, title, delay }) => (
     <div className="min-h-screen" style={{ backgroundColor: "#FFF2DB" }}>
       {/* Hero Section */}
       <section ref={ref} className="relative min-h-screen flex flex-col items-center justify-center px-4 pt-9 pb-9 md:px-6 bg-gradient-to-br from-[#003092] to-[#00879E] text-[#FFF2DB]">
-    <div className="max-w-6xl mx-auto text-center">
+    <div className="max-w-6xl mx-auto text-center !gap-20">
       {/* Heading */}
     <motion.h1 
-      className="text-5xl md:text-6xl font-bold mb-6"
+      className="text-5xl md:text-6xl font-bold !mt-5 !mb-12"
       initial="hidden"
       variants={fadeIn}
       whileInView="visible"
@@ -52,7 +52,7 @@ const FeatureCard = ({ icon, title, delay }) => (
 
     {/* Subheading */}
     <motion.h2
-      className="text-4xl md:text-4xl font-bold mb-4"
+      className="text-4xl md:text-4xl font-bold !mb-8"
       initial="hidden"
       variants={fadeIn}
       whileInView="visible"
@@ -64,7 +64,7 @@ const FeatureCard = ({ icon, title, delay }) => (
 
     {/* Description */}
     <motion.p 
-      className="text-lg md:text-xl leading-relaxed"
+      className="text-lg md:text-xl leading-relaxed !mb-10"
       initial="hidden"
       variants={fadeIn}
       whileInView="visible"
