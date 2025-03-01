@@ -1,9 +1,31 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { Card, Typography, Carousel, Button } from "antd";
 import { motion } from "framer-motion";
 import Groq from "groq-sdk";
 import { useEffect, useState, useRef } from "react";
+
+const groq = new Groq({
+  apiKey: process.env.NEXT_PUBLIC_GROQ_API_KEY,
+  dangerouslyAllowBrowser: true,
+});
+export async function main() {
+  const chatCompletion = await getGroqChatCompletion();
+  console.log(chatCompletion.choices[0]?.message?.content || "");
+}
+export async function getGroqChatCompletion() {
+  return groq.chat.completions.create({
+    messages: [
+      {
+        role: "user",
+        content: "Explain the importance of fast language models",
+      },
+    ],
+    model: "llama-3.3-70b-versatile",
+  });
+}
+
 import {
   CartesianGrid,
   Line,
@@ -18,6 +40,7 @@ import {
   Legend,
 } from "recharts";
 import { LeftOutlined, RightOutlined } from "@ant-design/icons";
+import axios from "axios";
 
 const { Title, Text } = Typography;
 
@@ -47,14 +70,125 @@ const chartData = [
 ];
 
 const powerGenData = [
-  { name: "Solar", value: 340 },
-  { name: "Wind", value: 280 },
-  { name: "Hydro", value: 250 },
+  {
+    name: "Solar",
+    value: 340,
+  },
+  {
+    name: "Wind",
+    value: 280,
+  },
+  {
+    name: "Hydro",
+    value: 250,
+  },
 ];
 
-const COLORS = [BRAND_COLORS.primary, BRAND_COLORS.secondary, BRAND_COLORS.accent, "#5B9EFF", "#88D4D9"];
+const COLORS = [
+  BRAND_COLORS.primary,
+  BRAND_COLORS.secondary,
+  BRAND_COLORS.accent,
+  "#5B9EFF",
+  "#88D4D9",
+];
+
+const chartConfig = {
+  visitors: {
+    label: "Visitors",
+    color: BRAND_COLORS.secondary,
+  },
+  chrome: {
+    label: "Chrome",
+    color: BRAND_COLORS.primary,
+  },
+  safari: {
+    label: "Safari",
+    color: BRAND_COLORS.secondary,
+  },
+  firefox: {
+    label: "Firefox",
+    color: BRAND_COLORS.accent,
+  },
+  edge: {
+    label: "Edge",
+    color: "#5B9EFF",
+  },
+  other: {
+    label: "Other",
+    color: "#88D4D9",
+  },
+};
 
 export function Component() {
+  const [SolarData, setSolarData] = useState([
+    { day: 1, solar_gen: 275 },
+    { day: 2, solar_gen: 320 },
+    { day: 3, solar_gen: 290 },
+    { day: 4, solar_gen: 305 },
+    { day: 5, solar_gen: 280 },
+    { day: 6, solar_gen: 315 },
+    { day: 7, solar_gen: 330 },
+    { day: 8, solar_gen: 310 },
+    { day: 9, solar_gen: 295 },
+    { day: 10, solar_gen: 340 },
+    { day: 11, solar_gen: 300 },
+    { day: 12, solar_gen: 285 },
+    { day: 13, solar_gen: 325 },
+    { day: 14, solar_gen: 335 },
+    { day: 15, solar_gen: 290 },
+  ]);
+  const [Wind, setWind] = useState([
+    { day: 1, wind_gen: 275 },
+    { day: 2, wind_gen: 320 },
+    { day: 3, wind_gen: 290 },
+    { day: 4, wind_gen: 305 },
+    { day: 5, wind_gen: 280 },
+    { day: 6, wind_gen: 315 },
+    { day: 7, wind_gen: 330 },
+    { day: 8, wind_gen: 310 },
+    { day: 9, wind_gen: 295 },
+    { day: 10, wind_gen: 340 },
+    { day: 11, wind_gen: 300 },
+    { day: 12, wind_gen: 285 },
+    { day: 13, wind_gen: 325 },
+    { day: 14, wind_gen: 335 },
+    { day: 15, wind_gen: 290 },
+  ]);
+  const [Hydro, setHydro] = useState([
+    { day: 1, Hydro_gen: 275 },
+    { day: 2, Hydro_gen: 320 },
+    { day: 3, Hydro_gen: 290 },
+    { day: 4, Hydro_gen: 305 },
+    { day: 5, Hydro_gen: 280 },
+    { day: 6, Hydro_gen: 315 },
+    { day: 7, Hydro_gen: 330 },
+    { day: 8, Hydro_gen: 310 },
+    { day: 9, Hydro_gen: 295 },
+    { day: 10, Hydro_gen: 340 },
+    { day: 11, Hydro_gen: 300 },
+    { day: 12, Hydro_gen: 285 },
+    { day: 13, Hydro_gen: 325 },
+    { day: 14, Hydro_gen: 335 },
+    { day: 15, Hydro_gen: 290 },
+  ]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:8000/api/dashboard/getdashboard"
+        );
+        setSolarData([...response.data.prediction.solar_gen]);
+        setWind([...response.data.prediction.wind_gen]);
+        setHydro([...response.data.prediction.hydro_gen]);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, []); // Remove the dependencies to prevent infinite loop
+
   const carouselRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [summary, setSummary] = useState("");
@@ -124,8 +258,13 @@ export function Component() {
   const CustomLineChart = ({ color, dataKey = "solar_gen", animationEnabled = true }) => (
     <ResponsiveContainer width="100%" height="100%">
       <LineChart
-        data={chartData}
-        margin={{ top: 20, right: 50, left: 50, bottom: 20 }}
+        data={data}
+        margin={{
+          top: 20,
+          right: 50,
+          left: 50,
+          bottom: 20,
+        }}
       >
         <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" />
         <XAxis dataKey="day" tick={{ fill: BRAND_COLORS.primary }} axisLine={{ stroke: BRAND_COLORS.primary, strokeWidth: 1.5 }} label={{ value: "Day", position: "bottom", offset: 0 }} />
@@ -205,179 +344,134 @@ export function Component() {
           draggable={true}
           style={{ margin: "0 auto", padding: "0 4px", width: "100%" }}
           beforeChange={(from, to) => setActiveIndex(to)}
-          dotStyle={{ background: BRAND_COLORS.secondary + "50", borderRadius: "4px", width: "20px", height: "6px" }}
-          activeDotStyle={{ background: BRAND_COLORS.primary, borderRadius: "4px", width: "30px", height: "6px" }}
+          dotStyle={{
+            background: BRAND_COLORS.secondary + "50",
+            borderRadius: "4px",
+            width: "20px",
+            height: "6px",
+          }}
+          activeDotStyle={{
+            background: BRAND_COLORS.primary,
+            borderRadius: "4px",
+            width: "30px",
+            height: "6px",
+          }}
         >
+          {/* First slide - Solar */}
           <div>
-            <motion.div
-              initial="hidden"
-              animate="visible"
-              transition={{ duration: 0.5 }}
-            >
-              <Card style={cardStyle}>
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  <Title level={3} style={{ color: BRAND_COLORS.primary }}>
-                    Browser Visitors Trend
-                  </Title>
-                  <Text type="secondary">January - June 2024</Text>
-                </motion.div>
-                <div
-                  style={{
-                    width: "100%",
-                    height: "500px",
-                    marginTop: "20px",
-                    marginBottom: "20px",
-                  }}
-                >
-                  <CustomLineChart color={BRAND_COLORS.primary} />
-                </div>
-              </Card>
-            </motion.div>
+            <Card style={cardStyle}>
+              <Title level={3} style={{ color: BRAND_COLORS.primary }}>
+                Solar Generation Trend
+              </Title>
+              <div style={{ height: "500px" }}>
+                <CustomLineChart
+                  color={BRAND_COLORS.primary}
+                  dataKey="solar_gen"
+                  data={SolarData}
+                  title="Solar"
+                />
+              </div>
+            </Card>
           </div>
 
+          {/* Second slide - Wind */}
           <div>
-            <motion.div
-              initial="hidden"
-              animate={activeIndex === 1 ? "visible" : "hidden"}
-              transition={{ duration: 0.5 }}
-            >
-              <Card style={cardStyle} bodyStyle={{ padding: "24px" }}>
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  <Title level={3} style={{ color: BRAND_COLORS.secondary }}>
-                    Market Penetration
-                  </Title>
-                  <Text type="secondary">January - June 2024</Text>
-                </motion.div>
-                <div
-                  style={{
-                    width: "100%",
-                    height: "500px",
-                    marginTop: "20px",
-                    marginBottom: "20px",
-                  }}
-                >
-                  <CustomLineChart color={BRAND_COLORS.secondary} />
-                </div>
-              </Card>
-            </motion.div>
+            <Card style={cardStyle}>
+              <Title level={3} style={{ color: BRAND_COLORS.secondary }}>
+                Wind Generation Trend
+              </Title>
+              <div style={{ height: "500px" }}>
+                <CustomLineChart
+                  color={BRAND_COLORS.secondary}
+                  dataKey="wind_gen"
+                  data={Wind}
+                  title="Wind"
+                />
+              </div>
+            </Card>
           </div>
 
+          {/* Third slide - Hydro */}
           <div>
-            <motion.div
-              initial="hidden"
-              animate={activeIndex === 2 ? "visible" : "hidden"}
-              transition={{ duration: 0.5 }}
-            >
-              <Card style={cardStyle} bodyStyle={{ padding: "24px" }}>
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  <Title level={3} style={{ color: BRAND_COLORS.accent }}>
-                    User Engagement Metrics
-                  </Title>
-                  <Text type="secondary">January - June 2024</Text>
-                </motion.div>
-                <div
-                  style={{
-                    width: "100%",
-                    height: "500px",
-                    marginTop: "20px",
-                    marginBottom: "20px",
-                  }}
-                >
-                  <CustomLineChart color={BRAND_COLORS.accent} />
-                </div>
-              </Card>
-            </motion.div>
+            <Card style={cardStyle}>
+              <Title level={3} style={{ color: BRAND_COLORS.accent }}>
+                Hydro Generation Trend
+              </Title>
+              <div style={{ height: "500px" }}>
+                <CustomLineChart
+                  color={BRAND_COLORS.accent}
+                  dataKey="Hydro_gen"
+                  data={Hydro}
+                  title="Hydro"
+                />
+              </div>
+            </Card>
           </div>
 
+          {/* Fourth slide - Distribution Pie Chart */}
           <div>
-            <motion.div
-              initial="hidden"
-              animate={activeIndex === 3 ? "visible" : "hidden"}
-              variants={pieVariants}
-            >
-              <Card style={cardStyle}>
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  <Title level={3} style={{ color: BRAND_COLORS.primary }}>
-                    Browser Distribution
-                  </Title>
-                  <Text type="secondary">January - June 2024</Text>
-                </motion.div>
-                <div
-                  style={{
-                    width: "100%",
-                    height: "500px",
-                    marginTop: "20px",
-                    marginBottom: "20px",
-                  }}
-                >
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "white",
-                          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                          border: "none",
-                          borderRadius: "8px",
-                        }}
-                        formatter={(value, name) => [
-                          `${value} kW (${Math.round((value / 870) * 100)}%)`,
-                          name,
-                        ]}
-                      />
-                      <Legend
-                        iconType="circle"
-                        layout="horizontal"
-                        verticalAlign="bottom"
-                        align="center"
-                      />
-                      <Pie
-                        data={powerGenData}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={160}
-                        innerRadius={80}
-                        fill="#8884d8"
-                        paddingAngle={5}
-                        isAnimationActive={true}
-                        animationBegin={300}
-                        animationDuration={1500}
-                        label={({ name, percent }) =>
-                          `${name} ${(percent * 100).toFixed(0)}%`
-                        }
-                        labelLine={false}
-                      >
-                        {powerGenData.map((entry, index) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={COLORS[index % COLORS.length]}
-                            stroke="#fff"
-                            strokeWidth={3}
-                          />
-                        ))}
-                      </Pie>
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </Card>
-            </motion.div>
+            <Card style={cardStyle}>
+              <Title level={3} style={{ color: BRAND_COLORS.primary }}>
+                Power Generation Distribution
+              </Title>
+              <div style={{ height: "500px" }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[
+                        {
+                          name: "Solar",
+                          value: SolarData.reduce(
+                            (sum, item) => sum + item.solar_gen,
+                            0
+                          ),
+                        },
+                        {
+                          name: "Wind",
+                          value: Wind.reduce(
+                            (sum, item) => sum + item.wind_gen,
+                            0
+                          ),
+                        },
+                        {
+                          name: "Hydro",
+                          value: Hydro.reduce(
+                            (sum, item) => sum + item.Hydro_gen,
+                            0
+                          ),
+                        },
+                      ]}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={160}
+                      innerRadius={80}
+                      paddingAngle={5}
+                      label={({ name, percent }) =>
+                        `${name} ${(percent * 100).toFixed(0)}%`
+                      }
+                    >
+                      {powerGenData.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                          stroke="#fff"
+                          strokeWidth={3}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(value, name) => [
+                        `${value.toFixed(0)} kW`,
+                        `${name} Generation`,
+                      ]}
+                    />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
           </div>
         </Carousel>
 
