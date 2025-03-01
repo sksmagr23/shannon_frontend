@@ -13,11 +13,28 @@ const MapComponent = ({ center, onLocationClick }) => {
   const [clickedLocation, setClickedLocation] = useState(null);
   const [isHovering, setIsHovering] = useState(false);
 
+
+  const getCityName = async (lng, lat) => {
+    try {
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${mapboxgl.accessToken}&types=place`
+      );
+      const data = await response.json();
+      if (data.features && data.features.length > 0) {
+        return data.features[0].text; // Returns the city name
+      }
+      return 'Unknown Location';
+    } catch (error) {
+      console.error('Error getting location name:', error);
+      return 'Unknown Location';
+    }
+  };
+
   useEffect(() => {
     if (map.current) return;
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/dark-v11', 
+      style: 'mapbox://styles/mapbox/dark-v11',
       center: [center.lng, center.lat],
       zoom: 9
     });
@@ -26,10 +43,11 @@ const MapComponent = ({ center, onLocationClick }) => {
       visualizePitch: true
     }));
 
-    map.current.on('click', (e) => {
+    map.current.on('click', async (e) => {
       const { lng, lat } = e.lngLat;
-      setClickedLocation({ lng, lat });
-      onLocationClick({ lng, lat });
+      const cityName = await getCityName(lng, lat);
+      setClickedLocation({ lng, lat, cityName });
+      onLocationClick({ lng, lat, cityName });
 
       if (map.current.getLayer('clicked-point')) {
         map.current.removeLayer('clicked-point');
@@ -85,16 +103,16 @@ const MapComponent = ({ center, onLocationClick }) => {
       className="p-6"
       style={{ backgroundColor: "#FFF2DB", borderRadius: "20px" }}
     >
-      <motion.div 
-        ref={mapContainer} 
-        style={{ 
-          height: '500px', 
-          width: '100%', 
-          borderRadius: '15px', 
+      <motion.div
+        ref={mapContainer}
+        style={{
+          height: '500px',
+          width: '100%',
+          borderRadius: '15px',
           overflow: 'hidden',
           border: '3px solid #003092'
         }}
-        whileHover={{ 
+        whileHover={{
           boxShadow: '0px 0px 25px rgba(0,135,158,0.3)',
         }}
       />
@@ -104,7 +122,7 @@ const MapComponent = ({ center, onLocationClick }) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.2 }}
           className="mt-6 p-6 rounded-xl"
-          style={{ 
+          style={{
             backgroundColor: "#003092",
             color: "#FFF2DB"
           }}
@@ -112,7 +130,12 @@ const MapComponent = ({ center, onLocationClick }) => {
           <h3 className="text-2xl font-bold mb-4 text-center" style={{ color: "#FFAB5B" }}>
             Selected Location
           </h3>
-          <div className="grid grid-cols-2 gap-4 mb-6">
+
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="p-4 rounded-lg" style={{ backgroundColor: "rgba(0,135,158,0.2)" }}>
+              <p className="text-sm opacity-80">City</p>
+              <p className="text-xl font-semibold">{clickedLocation.cityName}</p>
+            </div>
             <div className="p-4 rounded-lg" style={{ backgroundColor: "rgba(0,135,158,0.2)" }}>
               <p className="text-sm opacity-80">Latitude</p>
               <p className="text-xl font-semibold">{clickedLocation.lat.toFixed(6)}°</p>
@@ -124,7 +147,7 @@ const MapComponent = ({ center, onLocationClick }) => {
           </div>
           <div className="flex justify-center">
             <motion.button
-              whileHover={{ 
+              whileHover={{
                 scale: 1.02,
                 backgroundColor: "#FFAB5B",
               }}
@@ -132,7 +155,7 @@ const MapComponent = ({ center, onLocationClick }) => {
               onHoverStart={() => setIsHovering(true)}
               onHoverEnd={() => setIsHovering(false)}
               className="w-[50%] py-4 rounded-xl font-bold text-lg transition-all duration-300 relative overflow-hidden"
-              style={{ 
+              style={{
                 backgroundColor: "#00879E",
                 color: "#FFF2DB"
               }}
@@ -141,7 +164,7 @@ const MapComponent = ({ center, onLocationClick }) => {
               <motion.span
                 className="absolute inset-0 flex items-center justify-center"
                 initial={false}
-                animate={{ 
+                animate={{
                   y: isHovering ? -30 : 0,
                   opacity: isHovering ? 0 : 1
                 }}
@@ -152,7 +175,7 @@ const MapComponent = ({ center, onLocationClick }) => {
               <motion.span
                 className="absolute inset-0 flex items-center justify-center"
                 initial={false}
-                animate={{ 
+                animate={{
                   y: isHovering ? 0 : 30,
                   opacity: isHovering ? 1 : 0
                 }}
