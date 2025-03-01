@@ -98,7 +98,7 @@ const FeatureCard = ({ icon, title, delay }) => (
       {/* Benefits Section */}
       <section className="py-20 px-4 md:px-6" style={{ backgroundColor: "#003092" }}>
         <div className="max-w-6xl mx-auto">
-          <motion.h2 
+          <motion.h2
             className="text-4xl font-bold text-center mb-16"
             style={{ color: "#FFF2DB" }}
             initial="hidden"
@@ -107,7 +107,7 @@ const FeatureCard = ({ icon, title, delay }) => (
           >
             Why Choose Shannon?
           </motion.h2>
-          
+
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
