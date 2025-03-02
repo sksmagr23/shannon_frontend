@@ -509,52 +509,284 @@ export function Component() {
           }}
           bodyStyle={{ padding: "24px" }}
         >
-          <Title level={3} style={{ color: BRAND_COLORS.primary, marginBottom: "16px" }}>
-            Data Summary
-          </Title>
-          <div className="summary-container" style={{ 
-            background: `linear-gradient(145deg, ${BRAND_COLORS.background}, #ffffff)`,
-            padding: "20px",
-            borderRadius: "12px",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.05)"
-          }}>
-            {isLoading ? (
-              <div style={{ textAlign: "center", padding: "20px" }}>
-                <Text>Analyzing data...</Text>
-              </div>
-            ) : (
-              summary.split('\n').map((line, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.2 * index, duration: 0.5 }}
-                  style={{
-                    marginBottom: index === 0 ? "16px" : "12px",
-                    display: "flex",
-                    alignItems: "flex-start",
-                    gap: "12px",
-                    fontSize: index === 0 ? "16px" : "15px",
-                    color: index === 0 ? BRAND_COLORS.primary : "#333",
-                    fontWeight: index === 0 ? "600" : "normal",
-                  }}
-                >
-                  {index > 0 && (
-                    <div style={{
-                      minWidth: "8px",
-                      height: "8px",
-                      backgroundColor: BRAND_COLORS.accent,
-                      borderRadius: "50%",
-                      marginTop: "8px"
-                    }} />
-                  )}
-                  <div style={{
-                    flex: 1,
-                    lineHeight: "1.6",
-                  }}>{line}</div>
-                </motion.div>
-              ))
-            )}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+          >
+            <Title
+              level={3}
+              style={{ color: BRAND_COLORS.primary, marginBottom: "24px" }}
+            >
+              Energy Generation Analysis
+            </Title>
+
+            <Table
+              dataSource={[
+                {
+                  key: "1",
+                  source: "Solar",
+                  generation: SolarData.reduce(
+                    (sum, item) => sum + item.solar_gen,
+                    0
+                  ).toFixed(3),
+                  share:
+                    (
+                      (SolarData.reduce(
+                        (sum, item) => sum + item.solar_gen,
+                        0
+                      ) /
+                        (SolarData.reduce(
+                          (sum, item) => sum + item.solar_gen,
+                          0
+                        ) +
+                          Wind.reduce((sum, item) => sum + item.wind_gen, 0) +
+                          Hydro.reduce(
+                            (sum, item) => sum + item.Hydro_gen,
+                            0
+                          ))) *
+                      100
+                    ).toFixed(1) + "%",
+                  status: "up",
+                  color: BRAND_COLORS.primary,
+                },
+                {
+                  key: "2",
+                  source: "Wind",
+                  generation: Wind.reduce(
+                    (sum, item) => sum + item.wind_gen,
+                    0
+                  ).toFixed(3),
+                  share:
+                    (
+                      (Wind.reduce((sum, item) => sum + item.wind_gen, 0) /
+                        (SolarData.reduce(
+                          (sum, item) => sum + item.solar_gen,
+                          0
+                        ) +
+                          Wind.reduce((sum, item) => sum + item.wind_gen, 0) +
+                          Hydro.reduce(
+                            (sum, item) => sum + item.Hydro_gen,
+                            0
+                          ))) *
+                      100
+                    ).toFixed(1) + "%",
+                  status: "up",
+                  color: BRAND_COLORS.secondary,
+                },
+                {
+                  key: "3",
+                  source: "Hydro",
+                  generation: Hydro.reduce(
+                    (sum, item) => sum + item.Hydro_gen,
+                    0
+                  ).toFixed(3),
+                  share:
+                    (
+                      (Hydro.reduce((sum, item) => sum + item.Hydro_gen, 0) /
+                        (SolarData.reduce(
+                          (sum, item) => sum + item.solar_gen,
+                          0
+                        ) +
+                          Wind.reduce((sum, item) => sum + item.wind_gen, 0) +
+                          Hydro.reduce(
+                            (sum, item) => sum + item.Hydro_gen,
+                            0
+                          ))) *
+                      100
+                    ).toFixed(1) + "%",
+                  status: "up",
+                  color: BRAND_COLORS.accent,
+                },
+              ]}
+              columns={[
+                {
+                  title: "Energy Source",
+                  dataIndex: "source",
+                  key: "source",
+                  render: (text, record) => (
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "12px",
+                          height: "12px",
+                          borderRadius: "4px",
+                          backgroundColor: record.color,
+                          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                        }}
+                      />
+                      <span
+                        style={{ fontWeight: 600, color: BRAND_COLORS.primary }}
+                      >
+                        {text}
+                      </span>
+                    </div>
+                  ),
+                },
+                {
+                  title: "Total Generation (MW)",
+                  dataIndex: "generation",
+                  key: "generation",
+                  render: (text) => (
+                    <span style={{ fontWeight: 600 }}>{text}</span>
+                  ),
+                },
+                {
+                  title: "Share of Total Generation",
+                  dataIndex: "share",
+                  key: "share",
+                  render: (text) => (
+                    <div
+                      style={{
+                        background: `${BRAND_COLORS.background}`,
+                        padding: "6px 14px",
+                        borderRadius: "12px",
+                        display: "inline-block",
+                        fontWeight: 500,
+                        boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                      }}
+                    >
+                      {text}
+                    </div>
+                  ),
+                },
+              ]}
+              pagination={false}
+            />
+          </motion.div>
+
+          <div style={{ marginTop: "40px", display: "flex", gap: "24px" }}>
+            <motion.div
+              style={{ flex: 1 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6, duration: 0.5 }}
+              whileHover={{ y: -5, transition: { duration: 0.2 } }}
+            >
+              <Card
+                title={
+                  <div
+                    style={{
+                      fontSize: "18px",
+                      fontWeight: 600,
+                      background: `linear-gradient(45deg, ${BRAND_COLORS.primary}, ${BRAND_COLORS.secondary})`,
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                    }}
+                  >
+                    Generation Insights
+                  </div>
+                }
+                style={{
+                  height: "100%",
+                  boxShadow:
+                    "0 8px 24px rgba(0, 48, 146, 0.06), 0 2px 8px rgba(0, 135, 158, 0.04)",
+                  borderRadius: "12px",
+                  border: "none",
+                }}
+              >
+                <motion.ul style={{ listStyleType: "none", padding: 0 }}>
+                  {dashboardAnalysis.keyFindings.map((item, index) => (
+                    <motion.li
+                      key={index}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.7 + index * 0.1, duration: 0.3 }}
+                      whileHover={{ x: 5, color: BRAND_COLORS.primary }}
+                      style={{
+                        padding: "12px 0",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                        borderBottom:
+                          index < 3 ? "1px solid rgba(0,0,0,0.06)" : "none",
+                        transition: "all 0.3s ease",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "8px",
+                          height: "8px",
+                          borderRadius: "2px",
+                          backgroundColor: BRAND_COLORS.primary,
+                          transform: "rotate(45deg)",
+                        }}
+                      />
+                      {item}
+                    </motion.li>
+                  ))}
+                </motion.ul>
+              </Card>
+            </motion.div>
+
+            <motion.div
+              style={{ flex: 1 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7, duration: 0.5 }}
+              whileHover={{ y: -5, transition: { duration: 0.2 } }}
+            >
+              <Card
+                title={
+                  <div
+                    style={{
+                      fontSize: "18px",
+                      fontWeight: 600,
+                      background: `linear-gradient(45deg, ${BRAND_COLORS.secondary}, ${BRAND_COLORS.accent})`,
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                    }}
+                  >
+                    Optimization Suggestions
+                  </div>
+                }
+                style={{
+                  height: "100%",
+                  boxShadow:
+                    "0 8px 24px rgba(0, 48, 146, 0.06), 0 2px 8px rgba(0, 135, 158, 0.04)",
+                  borderRadius: "12px",
+                  border: "none",
+                }}
+              >
+                <motion.ul style={{ listStyleType: "none", padding: 0 }}>
+                  {dashboardAnalysis.recommendations.map((item, index) => (
+                    <motion.li
+                      key={index}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.8 + index * 0.1, duration: 0.3 }}
+                      whileHover={{ x: 5, color: BRAND_COLORS.secondary }}
+                      style={{
+                        padding: "12px 0",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        borderBottom:
+                          index < 3 ? "1px solid rgba(0,0,0,0.06)" : "none",
+                        transition: "all 0.3s ease",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "8px",
+                          height: "8px",
+                          borderRadius: "2px",
+                          backgroundColor: BRAND_COLORS.secondary,
+                          transform: "rotate(45deg)",
+                        }}
+                      />
+                      {item}
+                    </motion.li>
+                  ))}
+                </motion.ul>
+              </Card>
+            </motion.div>
           </div>
         </Card>
       </motion.div>
