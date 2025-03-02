@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Card, Typography, Carousel, Button } from "antd";
+import { Card, Typography, Carousel, Button, Table } from "antd";
 import { motion } from "framer-motion";
 import Groq from "groq-sdk";
-import { useEffect, useState, useRef } from "react";
 
 const groq = new Groq({
   apiKey: process.env.NEXT_PUBLIC_GROQ_API_KEY,
@@ -172,15 +171,30 @@ export function Component() {
     { day: 15, Hydro_gen: 290 },
   ]);
 
+  const [dashboardAnalysis, setDashboardAnalysis] = useState({
+    keyFindings: [
+      "Solar generation shows highest contribution at peak hours",
+      "Wind generation remains stable throughout the period",
+      "Hydro power provides consistent base load generation",
+      "Overall system efficiency maintains above 85%"
+    ],
+    recommendations: [
+      "Optimize solar panel alignment for maximum exposure",
+      "Implement predictive maintenance for wind turbines",
+      "Balance hydro reservoir levels for peak demand",
+      "Consider energy storage solutions for better grid stability"
+    ]
+  });
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
           "http://localhost:8000/api/dashboard/getdashboard"
         );
-        setSolarData([...response.data.prediction.solar_gen]);
-        setWind([...response.data.prediction.wind_gen]);
-        setHydro([...response.data.prediction.hydro_gen]);
+        await setSolarData([...response.data.prediction.solar_gen]);
+        await setWind([...response.data.prediction.wind_gen]);
+        await setHydro([...response.data.prediction.hydro_gen]);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -255,10 +269,11 @@ export function Component() {
     generateSummary();
   }, []);
 
-  const CustomLineChart = ({ color, dataKey = "solar_gen", animationEnabled = true }) => (
+
+  const CustomLineChart = ({ color, dataKey = "solar_gen", data, title, animationEnabled = true }) => (
     <ResponsiveContainer width="100%" height="100%">
       <LineChart
-        data={data}
+        data={data} // Now using the data prop passed to the component
         margin={{
           top: 20,
           right: 50,
@@ -267,11 +282,37 @@ export function Component() {
         }}
       >
         <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" />
-        <XAxis dataKey="day" tick={{ fill: BRAND_COLORS.primary }} axisLine={{ stroke: BRAND_COLORS.primary, strokeWidth: 1.5 }} label={{ value: "Day", position: "bottom", offset: 0 }} />
-        <YAxis tick={{ fill: BRAND_COLORS.primary }} axisLine={{ stroke: BRAND_COLORS.primary, strokeWidth: 1.5 }} label={{ value: "Solar Generation (kW)", angle: -90, position: "insideLeft" }} />
-        <Tooltip contentStyle={{ backgroundColor: "white", boxShadow: "0 4px 12px rgba(0,0,0,0.15)", border: "none", borderRadius: "8px" }} labelStyle={{ color: BRAND_COLORS.primary, fontWeight: "bold" }} formatter={(value) => [`${value} kW`, "Solar Generation"]} labelFormatter={(value) => `Day ${value}`} />
+        <XAxis 
+          dataKey="day" 
+          tick={{ fill: BRAND_COLORS.primary }} 
+          axisLine={{ stroke: BRAND_COLORS.primary, strokeWidth: 1.5 }} 
+          label={{ value: "Day", position: "bottom", offset: 0 }} 
+        />
+        <YAxis 
+          domain={[0, 1]}
+          ticks={[0, 0.2, 0.4, 0.6, 0.8, 1]}
+          tick={{ fill: BRAND_COLORS.primary }} 
+          axisLine={{ stroke: BRAND_COLORS.primary, strokeWidth: 1.5 }} 
+          label={{ value: `${title} Generation`, angle: -90, position: "insideLeft" }} 
+        />
+        <Tooltip 
+          contentStyle={{ backgroundColor: "white", boxShadow: "0 4px 12px rgba(0,0,0,0.15)", border: "none", borderRadius: "8px" }} 
+          labelStyle={{ color: BRAND_COLORS.primary, fontWeight: "bold" }} 
+          formatter={(value) => [`${value.toFixed(3)} MW`, `${title} Generation`]} 
+          labelFormatter={(value) => `Day ${value}`} 
+        />
         <Legend iconType="circle" iconSize={10} wrapperStyle={{ paddingTop: 20 }} />
-        <Line name="Solar Generation" dataKey={dataKey} type="monotone" stroke={color} strokeWidth={3} isAnimationActive={animationEnabled} animationDuration={1500} activeDot={{ r: 8, fill: color, strokeWidth: 2, stroke: "#FFFFFF", filter: "drop-shadow(0px 2px 4px rgba(0,0,0,0.3))" }} dot={{ r: 5, fill: color, stroke: "#FFFFFF", strokeWidth: 2 }} filter="drop-shadow(0px 3px 3px rgba(0,0,0,0.2))" />
+        <Line 
+          name={`${title} Generation`}
+          dataKey={dataKey} 
+          type="monotone" 
+          stroke={color} 
+          strokeWidth={3} 
+          isAnimationActive={animationEnabled} 
+          animationDuration={1500} 
+          activeDot={{ r: 8, fill: color, strokeWidth: 2, stroke: "#FFFFFF" }} 
+          dot={{ r: 5, fill: color, stroke: "#FFFFFF", strokeWidth: 2 }} 
+        />
       </LineChart>
     </ResponsiveContainer>
   );
@@ -507,7 +548,9 @@ export function Component() {
             overflow: "hidden",
             border: "none",
           }}
-          bodyStyle={{ padding: "24px" }}
+          styles={{
+            body: { padding: "24px" }
+          }}
         >
           <motion.div
             initial={{ opacity: 0, x: -20 }}
