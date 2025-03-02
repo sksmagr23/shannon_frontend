@@ -186,23 +186,50 @@ export function Component() {
     ]
   });
 
+  const [data, setData] = useState({});
+
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true);
       try {
-        const response = await axios.get(
-          "http://localhost:8000/api/dashboard/getdashboard"
-        );
-        await setSolarData([...response.data.prediction.solar_gen]);
-        await setWind([...response.data.prediction.wind_gen]);
-        await setHydro([...response.data.prediction.hydro_gen]);
+        const response = await axios.get("http://localhost:8000/api/prediction/preFetch");
+        if (response.data) {
+          // Store the full data
+          setData(response.data);
+          
+          // Transform the data for each generation type
+          const solarData = response.data.solar_gen?.map((value, index) => ({
+            day: index + 1,
+            solar_gen: value
+          })) || [];
+          
+          const windData = response.data.wind_gen?.map((value, index) => ({
+            day: index + 1,
+            wind_gen: value
+          })) || [];
+          
+          const hydroData = response.data.hydro_gen?.map((value, index) => ({
+            day: index + 1,
+            Hydro_gen: value
+          })) || [];
+
+          setSolarData(solarData);
+          setWind(windData);
+          setHydro(hydroData);
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchData();
   }, []); // Remove the dependencies to prevent infinite loop
 
+  console.log(data.solar_gen);
+  console.log(data.wind_gen);
+  console.log(data.hydro_gen);
   const carouselRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [summary, setSummary] = useState("");
@@ -462,24 +489,15 @@ export function Component() {
                       data={[
                         {
                           name: "Solar",
-                          value: SolarData.reduce(
-                            (sum, item) => sum + item.solar_gen,
-                            0
-                          ),
+                          value: data.solar_gen ? data.solar_gen.reduce((sum, val) => sum + val, 0) : 0,
                         },
                         {
                           name: "Wind",
-                          value: Wind.reduce(
-                            (sum, item) => sum + item.wind_gen,
-                            0
-                          ),
+                          value: data.wind_gen ? data.wind_gen.reduce((sum, val) => sum + val, 0) : 0,
                         },
                         {
                           name: "Hydro",
-                          value: Hydro.reduce(
-                            (sum, item) => sum + item.Hydro_gen,
-                            0
-                          ),
+                          value: data.hydro_gen ? data.hydro_gen.reduce((sum, val) => sum + val, 0) : 0,
                         },
                       ]}
                       dataKey="value"
@@ -569,75 +587,42 @@ export function Component() {
                 {
                   key: "1",
                   source: "Solar",
-                  generation: SolarData.reduce(
-                    (sum, item) => sum + item.solar_gen,
-                    0
-                  ).toFixed(3),
-                  share:
-                    (
-                      (SolarData.reduce(
-                        (sum, item) => sum + item.solar_gen,
-                        0
-                      ) /
-                        (SolarData.reduce(
-                          (sum, item) => sum + item.solar_gen,
-                          0
-                        ) +
-                          Wind.reduce((sum, item) => sum + item.wind_gen, 0) +
-                          Hydro.reduce(
-                            (sum, item) => sum + item.Hydro_gen,
-                            0
-                          ))) *
-                      100
-                    ).toFixed(1) + "%",
+                  generation: data.solar_gen ? 
+                    data.solar_gen.reduce((sum, val) => sum + val, 0).toFixed(3) : "0.000",
+                  share: data.solar_gen ? 
+                    ((data.solar_gen.reduce((sum, val) => sum + val, 0) / 
+                      (data.solar_gen.reduce((sum, val) => sum + val, 0) +
+                       data.wind_gen.reduce((sum, val) => sum + val, 0) +
+                       data.hydro_gen.reduce((sum, val) => sum + val, 0))) * 100
+                    ).toFixed(1) + "%" : "0.0%",
                   status: "up",
                   color: BRAND_COLORS.primary,
                 },
                 {
                   key: "2",
                   source: "Wind",
-                  generation: Wind.reduce(
-                    (sum, item) => sum + item.wind_gen,
-                    0
-                  ).toFixed(3),
-                  share:
-                    (
-                      (Wind.reduce((sum, item) => sum + item.wind_gen, 0) /
-                        (SolarData.reduce(
-                          (sum, item) => sum + item.solar_gen,
-                          0
-                        ) +
-                          Wind.reduce((sum, item) => sum + item.wind_gen, 0) +
-                          Hydro.reduce(
-                            (sum, item) => sum + item.Hydro_gen,
-                            0
-                          ))) *
-                      100
-                    ).toFixed(1) + "%",
+                  generation: data.wind_gen ?
+                    data.wind_gen.reduce((sum, val) => sum + val, 0).toFixed(3) : "0.000",
+                  share: data.wind_gen ?
+                    ((data.wind_gen.reduce((sum, val) => sum + val, 0) /
+                      (data.solar_gen.reduce((sum, val) => sum + val, 0) +
+                       data.wind_gen.reduce((sum, val) => sum + val, 0) +
+                       data.hydro_gen.reduce((sum, val) => sum + val, 0))) * 100
+                    ).toFixed(1) + "%" : "0.0%",
                   status: "up",
                   color: BRAND_COLORS.secondary,
                 },
                 {
                   key: "3",
                   source: "Hydro",
-                  generation: Hydro.reduce(
-                    (sum, item) => sum + item.Hydro_gen,
-                    0
-                  ).toFixed(3),
-                  share:
-                    (
-                      (Hydro.reduce((sum, item) => sum + item.Hydro_gen, 0) /
-                        (SolarData.reduce(
-                          (sum, item) => sum + item.solar_gen,
-                          0
-                        ) +
-                          Wind.reduce((sum, item) => sum + item.wind_gen, 0) +
-                          Hydro.reduce(
-                            (sum, item) => sum + item.Hydro_gen,
-                            0
-                          ))) *
-                      100
-                    ).toFixed(1) + "%",
+                  generation: data.hydro_gen ?
+                    data.hydro_gen.reduce((sum, val) => sum + val, 0).toFixed(3) : "0.000",
+                  share: data.hydro_gen ?
+                    ((data.hydro_gen.reduce((sum, val) => sum + val, 0) /
+                      (data.solar_gen.reduce((sum, val) => sum + val, 0) +
+                       data.wind_gen.reduce((sum, val) => sum + val, 0) +
+                       data.hydro_gen.reduce((sum, val) => sum + val, 0))) * 100
+                    ).toFixed(1) + "%" : "0.0%",
                   status: "up",
                   color: BRAND_COLORS.accent,
                 },
