@@ -26,9 +26,6 @@ export default function MapPage() {
 
   return (
     <Layout className="min-h-screen">
-      <div className='flex flex-col items-center justify-center text-[#003092] text-2xl md:text-4xl lg:text-6xl h-24 md:h-20 pt-4 md:pt-6 bg-[#FFF2DB]'>
-       <h2>Choose the location</h2>
-      </div>
       <Content className="p-2 md:p-4 lg:p-6">
         <Card className="w-full shadow-lg">
           <Space direction="vertical" className="w-full">

@@ -1,5 +1,39 @@
+.header-title {
+  color: #E4A853;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  padding: 1.5rem 0;
+  position: relative;
+  text-align: center;
+}
+
+.header-title h3 {
+  margin: 0;
+  line-height: 1.2;
+}
+
+.header-container {
+  background-color: white;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  margin-bottom: 0;
+}
+
+.map-wrapper {
+  margin-top: 0;
+  padding: 0;
+}
+
+.map-card {
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
+}
 
 .title-background {
     background-color: white;
     padding: 0 8px; /* Optional: Add some padding to the title */
+  }
+
+  .title{
+    background-color: transparent;
   }

@@ -116,57 +116,9 @@ export function Component() {
     }
   }, [searchParams]);
 
-  const [SolarData, setSolarData] = useState([
-    { day: 1, solar_gen: 275 },
-    { day: 2, solar_gen: 320 },
-    { day: 3, solar_gen: 290 },
-    { day: 4, solar_gen: 305 },
-    { day: 5, solar_gen: 280 },
-    { day: 6, solar_gen: 315 },
-    { day: 7, solar_gen: 330 },
-    { day: 8, solar_gen: 310 },
-    { day: 9, solar_gen: 295 },
-    { day: 10, solar_gen: 340 },
-    { day: 11, solar_gen: 300 },
-    { day: 12, solar_gen: 285 },
-    { day: 13, solar_gen: 325 },
-    { day: 14, solar_gen: 335 },
-    { day: 15, solar_gen: 290 },
-  ]);
-  const [Wind, setWind] = useState([
-    { day: 1, wind_gen: 275 },
-    { day: 2, wind_gen: 320 },
-    { day: 3, wind_gen: 290 },
-    { day: 4, wind_gen: 305 },
-    { day: 5, wind_gen: 280 },
-    { day: 6, wind_gen: 315 },
-    { day: 7, wind_gen: 330 },
-    { day: 8, wind_gen: 310 },
-    { day: 9, wind_gen: 295 },
-    { day: 10, wind_gen: 340 },
-    { day: 11, wind_gen: 300 },
-    { day: 12, wind_gen: 285 },
-    { day: 13, wind_gen: 325 },
-    { day: 14, wind_gen: 335 },
-    { day: 15, wind_gen: 290 },
-  ]);
-  const [Hydro, setHydro] = useState([
-    { day: 1, Hydro_gen: 275 },
-    { day: 2, Hydro_gen: 320 },
-    { day: 3, Hydro_gen: 290 },
-    { day: 4, Hydro_gen: 305 },
-    { day: 5, Hydro_gen: 280 },
-    { day: 6, Hydro_gen: 315 },
-    { day: 7, Hydro_gen: 330 },
-    { day: 8, Hydro_gen: 310 },
-    { day: 9, Hydro_gen: 295 },
-    { day: 10, Hydro_gen: 340 },
-    { day: 11, Hydro_gen: 300 },
-    { day: 12, Hydro_gen: 285 },
-    { day: 13, Hydro_gen: 325 },
-    { day: 14, Hydro_gen: 335 },
-    { day: 15, Hydro_gen: 290 },
-  ]);
+  const [SolarData, setSolarData] = useState([]);
+  const [Wind, setWind] = useState([]);
+  const [Hydro, setHydro] = useState([]);
 
   const [dashboardAnalysis, setDashboardAnalysis] = useState({
     keyFindings: [
@@ -199,7 +151,7 @@ export function Component() {
           for (let i = 0; i < 15; i++) {
             const date = new Date(startDate);
             date.setDate(startDate.getDate() + i);
-            dates.push(date.toISOString().split('T')[0]);
+            dates.push(date.toISOString().split('T')[0]);``
           }
 
           const data = {
@@ -210,7 +162,7 @@ export function Component() {
             ]
           };
 
-          const response = await axios.post('http://172.20.122.133:8000/predict/', data, {
+          const response = await axios.post(process.env.NEXT_PUBLIC_ML_API_KEY, data, {
             headers: {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
@@ -218,16 +170,70 @@ export function Component() {
             },
             timeout: 0,
             withCredentials: false
-          });
+          })
+          .catch((error) => {
+            console.error("Error fetching ML prediction data:", error);
+            setSolarData([
+            { day: 1, solar_gen: 27.5 },
+            { day: 2, solar_gen: 32.0 },
+            { day: 3, solar_gen: 29.0 },
+            { day: 4, solar_gen: 30.5 },
+            { day: 5, solar_gen: 28.0 },
+            { day: 6, solar_gen: 31.5 },
+            { day: 7, solar_gen: 33.0 },
+            { day: 8, solar_gen: 31.0 },
+            { day: 9, solar_gen: 29.5 },
+            { day: 10, solar_gen: 34.0 },
+            { day: 11, solar_gen: 30.0 },
+            { day: 12, solar_gen: 28.5 },
+            { day: 13, solar_gen: 32.5 },
+            { day: 14, solar_gen: 33.5 },
+            { day: 15, solar_gen: 29.0 },
+        ]);
+        setWind([
+          { day: 1, wind_gen: 27.5 },
+          { day: 2, wind_gen: 32.0 },
+          { day: 3, wind_gen: 29.0 },
+          { day: 4, wind_gen: 30.5 },
+          { day: 5, wind_gen: 28.0 },
+          { day: 6, wind_gen: 31.5 },
+          { day: 7, wind_gen: 33.0 },
+          { day: 8, wind_gen: 31.0 },
+          { day: 9, wind_gen: 29.5 },
+          { day: 10, wind_gen: 34.0 },
+          { day: 11, wind_gen: 30.0 },
+          { day: 12, wind_gen: 28.5 },
+          { day: 13, wind_gen: 32.5 },
+          { day: 14, wind_gen: 33.5 },
+          { day: 15, wind_gen: 29.0 },
+        ]);
+        setHydro([
+          { day: 1, Hydro_gen: 27.5 },
+          { day: 2, Hydro_gen: 32.0 },
+          { day: 3, Hydro_gen: 29.0 },
+          { day: 4, Hydro_gen: 30.5 },
+          { day: 5, Hydro_gen: 28.0 },
+          { day: 6, Hydro_gen: 31.5 },
+          { day: 7, Hydro_gen: 33.0 },
+          { day: 8, Hydro_gen: 31.0 },
+          { day: 9, Hydro_gen: 29.5 },
+          { day: 10, Hydro_gen: 34.0 },
+          { day: 11, Hydro_gen: 30.0 },
+          { day: 12, Hydro_gen: 28.5 },
+          { day: 13, Hydro_gen: 32.5 },
+          { day: 14, Hydro_gen: 33.5 },
+          { day: 15, Hydro_gen: 29.0 },
+        ]);
+      });
 
           console.log("ML Prediction data:", response.data);
 
           if (response.data) {
-            // Transform the data to include dates
+            // Transform the data to include dates and multiply values by 100
             if (Array.isArray(response.data.solar_gen)) {
               const solarData = response.data.solar_gen.map((value, index) => ({
                 date: dates[index],
-                solar_gen: value
+                solar_gen: value * 100
               }));
               setSolarData(solarData);
             }
@@ -235,7 +241,7 @@ export function Component() {
             if (Array.isArray(response.data.wind_gen)) {
               const windData = response.data.wind_gen.map((value, index) => ({
                 date: dates[index],
-                wind_gen: value
+                wind_gen: value * 100
               }));
               setWind(windData);
             }
@@ -243,12 +249,19 @@ export function Component() {
             if (Array.isArray(response.data.hydro_gen)) {
               const hydroData = response.data.hydro_gen.map((value, index) => ({
                 date: dates[index],
-                Hydro_gen: value
+                Hydro_gen: value * 100
               }));
               setHydro(hydroData);
             }
 
-            setData(response.data);
+            // Store the modified data
+            const modifiedData = {
+              ...response.data,
+              solar_gen: response.data.solar_gen?.map(value => value * 100) || [],
+              wind_gen: response.data.wind_gen?.map(value => value * 100) || [],
+              hydro_gen: response.data.hydro_gen?.map(value => value * 100) || []
+            };
+            setData(modifiedData);
           }
         }
       } catch (error) {
@@ -484,7 +497,6 @@ Do not include any other text or formatting. Only return the JSON object.`;
   });
 
   const CustomLineChart = ({ color, dataKey = "solar_gen", data, title, animationEnabled = true }) => {
-    // Format current date to match data format
     const currentDate = new Date().toISOString().split('T')[0];
 
     return (
@@ -507,16 +519,17 @@ Do not include any other text or formatting. Only return the JSON object.`;
             label={{ value: "Date", position: "bottom", offset: 0 }} 
           />
           <YAxis 
-            domain={[0, 1]}
-            ticks={[0, 0.2, 0.4, 0.6, 0.8, 1]}
+            domain={[0, 100]}
+            ticks={[0, 20, 40, 60, 80, 100]}
+            tickFormatter={(value) => `${value}%`}
             tick={{ fill: BRAND_COLORS.primary }} 
             axisLine={{ stroke: BRAND_COLORS.primary, strokeWidth: 1.5 }} 
-            label={{ value: `${title} Generation`, angle: -90, position: "insideLeft" }} 
+            label={{ value: `${title} Efficiency`, angle: -90, position: "insideLeft" }} 
           />
           <Tooltip 
             contentStyle={{ backgroundColor: "white", boxShadow: "0 4px 12px rgba(0,0,0,0.15)", border: "none", borderRadius: "8px" }} 
             labelStyle={{ color: BRAND_COLORS.primary, fontWeight: "bold" }} 
-            formatter={(value) => [`${value.toFixed(3)} MW`, `${title} Generation`]} 
+            formatter={(value) => [`${value.toFixed(1)}%`, `${title} Efficiency`]} 
             labelFormatter={(date) => new Date(date).toLocaleDateString()} 
           />
           <Legend iconType="circle" iconSize={10} wrapperStyle={{ paddingTop: 20 }} />
@@ -534,7 +547,7 @@ Do not include any other text or formatting. Only return the JSON object.`;
             }}
           />
           <Line 
-            name={`${title} Generation`}
+            name={`${title} Efficiency`}
             dataKey={dataKey} 
             type="monotone" 
             stroke={color} 
@@ -654,15 +667,30 @@ Do not include any other text or formatting. Only return the JSON object.`;
                       data={[
                         {
                           name: "Solar",
-                          value: data.solar_gen ? data.solar_gen.reduce((sum, val) => sum + val, 0) : 0,
+                          value: data.solar_gen ? 
+                            (data.solar_gen.reduce((sum, val) => sum + val, 0) / 
+                              (data.solar_gen.reduce((sum, val) => sum + val, 0) +
+                               data.wind_gen.reduce((sum, val) => sum + val, 0) +
+                               data.hydro_gen.reduce((sum, val) => sum + val, 0)) * 100
+                            ).toFixed(1) : 0.0,
                         },
                         {
                           name: "Wind",
-                          value: data.wind_gen ? data.wind_gen.reduce((sum, val) => sum + val, 0) : 0,
+                          value: data.wind_gen ? 
+                            (data.wind_gen.reduce((sum, val) => sum + val, 0) / 
+                              (data.solar_gen.reduce((sum, val) => sum + val, 0) +
+                               data.wind_gen.reduce((sum, val) => sum + val, 0) +
+                               data.hydro_gen.reduce((sum, val) => sum + val, 0)) * 100
+                            ).toFixed(1) : 0.0,
                         },
                         {
                           name: "Hydro",
-                          value: data.hydro_gen ? data.hydro_gen.reduce((sum, val) => sum + val, 0) : 0,
+                          value: data.hydro_gen ? 
+                            (data.hydro_gen.reduce((sum, val) => sum + val, 0) / 
+                              (data.solar_gen.reduce((sum, val) => sum + val, 0) +
+                               data.wind_gen.reduce((sum, val) => sum + val, 0) +
+                               data.hydro_gen.reduce((sum, val) => sum + val, 0)) * 100
+                            ).toFixed(1) : 0.0,
                         },
                       ]}
                       dataKey="value"
@@ -753,9 +781,13 @@ Do not include any other text or formatting. Only return the JSON object.`;
                   key: "1",
                   source: "Solar",
                   generation: data.solar_gen ? 
-                    data.solar_gen.reduce((sum, val) => sum + val, 0).toFixed(3) : "0.000",
+                    (data.solar_gen.reduce((sum, val) => sum + val, 0) / 
+                      (data.solar_gen.reduce((sum, val) => sum + val, 0) +
+                       data.wind_gen.reduce((sum, val) => sum + val, 0) +
+                       data.hydro_gen.reduce((sum, val) => sum + val, 0)) * 100
+                    ).toFixed(1) + "%" : "0.0%",
                   share: data.solar_gen ? 
-                    ((data.solar_gen.reduce((sum, val) => sum + val, 0) / 
+                    ((data.solar_gen.reduce((sum, val) => sum + val, 0) /
                       (data.solar_gen.reduce((sum, val) => sum + val, 0) +
                        data.wind_gen.reduce((sum, val) => sum + val, 0) +
                        data.hydro_gen.reduce((sum, val) => sum + val, 0))) * 100
@@ -767,7 +799,11 @@ Do not include any other text or formatting. Only return the JSON object.`;
                   key: "2",
                   source: "Wind",
                   generation: data.wind_gen ?
-                    data.wind_gen.reduce((sum, val) => sum + val, 0).toFixed(3) : "0.000",
+                    (data.wind_gen.reduce((sum, val) => sum + val, 0) / 
+                      (data.solar_gen.reduce((sum, val) => sum + val, 0) +
+                       data.wind_gen.reduce((sum, val) => sum + val, 0) +
+                       data.hydro_gen.reduce((sum, val) => sum + val, 0)) * 100
+                    ).toFixed(1) + "%" : "0.0%",
                   share: data.wind_gen ?
                     ((data.wind_gen.reduce((sum, val) => sum + val, 0) /
                       (data.solar_gen.reduce((sum, val) => sum + val, 0) +
@@ -781,7 +817,11 @@ Do not include any other text or formatting. Only return the JSON object.`;
                   key: "3",
                   source: "Hydro",
                   generation: data.hydro_gen ?
-                    data.hydro_gen.reduce((sum, val) => sum + val, 0).toFixed(3) : "0.000",
+                    (data.hydro_gen.reduce((sum, val) => sum + val, 0) / 
+                      (data.solar_gen.reduce((sum, val) => sum + val, 0) +
+                       data.wind_gen.reduce((sum, val) => sum + val, 0) +
+                       data.hydro_gen.reduce((sum, val) => sum + val, 0)) * 100
+                    ).toFixed(1) + "%" : "0.0%",
                   share: data.hydro_gen ?
                     ((data.hydro_gen.reduce((sum, val) => sum + val, 0) /
                       (data.solar_gen.reduce((sum, val) => sum + val, 0) +
@@ -823,7 +863,7 @@ Do not include any other text or formatting. Only return the JSON object.`;
                   ),
                 },
                 {
-                  title: "Total Generation (MW)",
+                  title: "Total Efficiency (%)",
                   dataIndex: "generation",
                   key: "generation",
                   render: (text) => (
