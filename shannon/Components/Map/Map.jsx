@@ -15,13 +15,25 @@ const MapComponent = ({ center, onLocationClick }) => {
   const [isHovering, setIsHovering] = useState(false);
 
 
-  const handleDashboard = async() => {
-    const latitude = clickedLocation.lat.toFixed(6);
-    const longitude = clickedLocation.lng.toFixed(6);
-    const respones = axios.post('http://localhost:8000/api/dashboard/add/', {latitude, longitude});
-    console.log('Response:', respones.data);
-    window.location.href = "/dashboard";
-  }
+  const handleDashboard = async () => {
+    try {
+      const latitude = clickedLocation.lat.toFixed(6);
+      const longitude = clickedLocation.lng.toFixed(6);
+      // const response = await axios.post('http://localhost:8000/api/dashboard/add/', {
+      //   latitude,
+      //   longitude
+      // });
+      console.log('Response:', response.data);
+      // Call the onLocationClick prop to handle navigation with the location data
+      onLocationClick({
+        lat: latitude,
+        lng: longitude,
+        cityName: clickedLocation.cityName
+      });
+    } catch (error) {
+      console.error('Error sending location data:', error);
+    }
+  };
   const getCityName = async (lng, lat) => {
     try {
       const response = await fetch(
@@ -55,7 +67,6 @@ const MapComponent = ({ center, onLocationClick }) => {
       const { lng, lat } = e.lngLat;
       const cityName = await getCityName(lng, lat);
       setClickedLocation({ lng, lat, cityName });
-      onLocationClick({ lng, lat, cityName });
 
       if (map.current.getLayer('clicked-point')) {
         map.current.removeLayer('clicked-point');

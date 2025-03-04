@@ -2,17 +2,26 @@
 import { Layout, Typography, Card, Space } from 'antd';
 import MapComponent from '../../../Components/Map/Map';
 import './page.css';
+import { useRouter } from 'next/navigation';
+
 const { Header, Content } = Layout;
 const { Title } = Typography;
 
 export default function MapPage() {
+  const router = useRouter();
   const defaultCenter = {
     lat: 20.5937,
     lng: 78.9629
   };
 
   const handleLocationClick = (location) => {
-    console.log('Selected location:', location);
+    // Navigate to dashboard with location data as URL parameters
+    const params = new URLSearchParams({
+      lat: location.lat,
+      lng: location.lng,
+      cityName: location.cityName
+    });
+    router.push(`/dashboard?${params.toString()}`);
   };
 
   return (

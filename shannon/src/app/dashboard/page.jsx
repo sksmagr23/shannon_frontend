@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Card, Typography, Carousel, Button, Table } from "antd";
 import { motion } from "framer-motion";
 import Groq from "groq-sdk";
+import { useSearchParams } from 'next/navigation';
 
 const groq = new Groq({
   apiKey: process.env.NEXT_PUBLIC_GROQ_API_KEY,
@@ -37,6 +38,7 @@ import {
   PieChart,
   Cell,
   Legend,
+  ReferenceLine,
 } from "recharts";
 import { LeftOutlined, RightOutlined } from "@ant-design/icons";
 import axios from "axios";
@@ -91,34 +93,29 @@ const COLORS = [
   "#88D4D9",
 ];
 
-const chartConfig = {
-  visitors: {
-    label: "Visitors",
-    color: BRAND_COLORS.secondary,
-  },
-  chrome: {
-    label: "Chrome",
-    color: BRAND_COLORS.primary,
-  },
-  safari: {
-    label: "Safari",
-    color: BRAND_COLORS.secondary,
-  },
-  firefox: {
-    label: "Firefox",
-    color: BRAND_COLORS.accent,
-  },
-  edge: {
-    label: "Edge",
-    color: "#5B9EFF",
-  },
-  other: {
-    label: "Other",
-    color: "#88D4D9",
-  },
-};
-
 export function Component() {
+  const searchParams = useSearchParams();
+  const [locationData, setLocationData] = useState({
+    lat: null,
+    lng: null,
+    cityName: null
+  });
+
+  useEffect(() => {
+    // Get location data from URL parameters
+    const lat = searchParams.get('lat');
+    const lng = searchParams.get('lng');
+    const cityName = searchParams.get('cityName');
+    
+    if (lat && lng && cityName) {
+      setLocationData({
+        lat: parseFloat(lat),
+        lng: parseFloat(lng),
+        cityName: cityName
+      });
+    }
+  }, [searchParams]);
+
   const [SolarData, setSolarData] = useState([
     { day: 1, solar_gen: 275 },
     { day: 2, solar_gen: 320 },
@@ -188,48 +185,84 @@ export function Component() {
 
   const [data, setData] = useState({});
 
+
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const response = await axios.get("http://localhost:8000/api/prediction/preFetch");
-        if (response.data) {
-          // Store the full data
-          setData(response.data);
+        if (locationData.lat && locationData.lng) {
+          // Format dates for the API request
+          const dates = [];
+          const startDate = new Date();
+          startDate.setDate(startDate.getDate() - 7); // 7 days before today
           
-          // Transform the data for each generation type
-          const solarData = response.data.solar_gen?.map((value, index) => ({
-            day: index + 1,
-            solar_gen: value
-          })) || [];
-          
-          const windData = response.data.wind_gen?.map((value, index) => ({
-            day: index + 1,
-            wind_gen: value
-          })) || [];
-          
-          const hydroData = response.data.hydro_gen?.map((value, index) => ({
-            day: index + 1,
-            Hydro_gen: value
-          })) || [];
+          for (let i = 0; i < 15; i++) {
+            const date = new Date(startDate);
+            date.setDate(startDate.getDate() + i);
+            dates.push(date.toISOString().split('T')[0]);
+          }
 
-          setSolarData(solarData);
-          setWind(windData);
-          setHydro(hydroData);
+          const data = {
+            "Message": [
+              Number(locationData.lat), 
+              Number(locationData.lng), 
+              Date.now()
+            ]
+          };
+
+          const response = await axios.post('http://172.20.122.133:8000/predict/', data, {
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'Access-Control-Allow-Origin': '*'
+            },
+            timeout: 0,
+            withCredentials: false
+          });
+
+          console.log("ML Prediction data:", response.data);
+
+          if (response.data) {
+            // Transform the data to include dates
+            if (Array.isArray(response.data.solar_gen)) {
+              const solarData = response.data.solar_gen.map((value, index) => ({
+                date: dates[index],
+                solar_gen: value
+              }));
+              setSolarData(solarData);
+            }
+
+            if (Array.isArray(response.data.wind_gen)) {
+              const windData = response.data.wind_gen.map((value, index) => ({
+                date: dates[index],
+                wind_gen: value
+              }));
+              setWind(windData);
+            }
+
+            if (Array.isArray(response.data.hydro_gen)) {
+              const hydroData = response.data.hydro_gen.map((value, index) => ({
+                date: dates[index],
+                Hydro_gen: value
+              }));
+              setHydro(hydroData);
+            }
+
+            setData(response.data);
+          }
         }
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching ML prediction data:", error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchData();
-  }, []); // Remove the dependencies to prevent infinite loop
+    if (locationData.lat && locationData.lng) {
+      fetchData();
+    }
+  }, [locationData]);
 
-  console.log(data.solar_gen);
-  console.log(data.wind_gen);
-  console.log(data.hydro_gen);
   const carouselRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [summary, setSummary] = useState("");
@@ -296,101 +329,228 @@ export function Component() {
     generateSummary();
   }, []);
 
+  useEffect(() => {
+    async function generateDynamicInsights() {
+      if (!data.solar_gen || !data.wind_gen || !data.hydro_gen) return;
 
-  const CustomLineChart = ({ color, dataKey = "solar_gen", data, title, animationEnabled = true }) => (
-    <ResponsiveContainer width="100%" height="100%">
-      <LineChart
-        data={data} // Now using the data prop passed to the component
-        margin={{
-          top: 20,
-          right: 50,
-          left: 50,
-          bottom: 20,
-        }}
-      >
-        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" />
-        <XAxis 
-          dataKey="day" 
-          tick={{ fill: BRAND_COLORS.primary }} 
-          axisLine={{ stroke: BRAND_COLORS.primary, strokeWidth: 1.5 }} 
-          label={{ value: "Day", position: "bottom", offset: 0 }} 
-        />
-        <YAxis 
-          domain={[0, 1]}
-          ticks={[0, 0.2, 0.4, 0.6, 0.8, 1]}
-          tick={{ fill: BRAND_COLORS.primary }} 
-          axisLine={{ stroke: BRAND_COLORS.primary, strokeWidth: 1.5 }} 
-          label={{ value: `${title} Generation`, angle: -90, position: "insideLeft" }} 
-        />
-        <Tooltip 
-          contentStyle={{ backgroundColor: "white", boxShadow: "0 4px 12px rgba(0,0,0,0.15)", border: "none", borderRadius: "8px" }} 
-          labelStyle={{ color: BRAND_COLORS.primary, fontWeight: "bold" }} 
-          formatter={(value) => [`${value.toFixed(3)} MW`, `${title} Generation`]} 
-          labelFormatter={(value) => `Day ${value}`} 
-        />
-        <Legend iconType="circle" iconSize={10} wrapperStyle={{ paddingTop: 20 }} />
-        <Line 
-          name={`${title} Generation`}
-          dataKey={dataKey} 
-          type="monotone" 
-          stroke={color} 
-          strokeWidth={3} 
-          isAnimationActive={animationEnabled} 
-          animationDuration={1500} 
-          activeDot={{ r: 8, fill: color, strokeWidth: 2, stroke: "#FFFFFF" }} 
-          dot={{ r: 5, fill: color, stroke: "#FFFFFF", strokeWidth: 2 }} 
-        />
-      </LineChart>
-    </ResponsiveContainer>
-  );
+      try {
+        const groq = new Groq({
+          apiKey: process.env.NEXT_PUBLIC_GROQ_API_KEY,
+          dangerouslyAllowBrowser: true
+        });
 
-  const cardStyle = {
-    background: `linear-gradient(135deg, #FFFFFF, ${BRAND_COLORS.background})`,
-    boxShadow: "0 10px 40px rgba(0, 48, 146, 0.08), 0 4px 12px rgba(0, 135, 158, 0.05)",
-    borderRadius: "16px",
-    width: "100%",
-    margin: "0 auto",
-    overflow: "hidden",
-    position: "relative",
-    zIndex: 10,
-    border: "none",
-  };
+        // Calculate total generation for pie chart analysis
+        const totalSolar = data.solar_gen.reduce((sum, val) => sum + val, 0);
+        const totalWind = data.wind_gen.reduce((sum, val) => sum + val, 0);
+        const totalHydro = data.hydro_gen.reduce((sum, val) => sum + val, 0);
+        const totalGeneration = totalSolar + totalWind + totalHydro;
+
+        // Calculate percentages for pie chart
+        const solarPercentage = (totalSolar / totalGeneration) * 100;
+        const windPercentage = (totalWind / totalGeneration) * 100;
+        const hydroPercentage = (totalHydro / totalGeneration) * 100;
+
+        // Analyze line chart trends
+        const solarTrend = data.solar_gen[data.solar_gen.length - 1] - data.solar_gen[0];
+        const windTrend = data.wind_gen[data.wind_gen.length - 1] - data.wind_gen[0];
+        const hydroTrend = data.hydro_gen[data.hydro_gen.length - 1] - data.hydro_gen[0];
+
+        const prompt = `You are an expert energy analyst. Analyze this energy generation data focusing on distribution and trends:
+
+Pie Chart Distribution:
+- Solar: ${solarPercentage.toFixed(1)}% of total generation
+- Wind: ${windPercentage.toFixed(1)}% of total generation
+- Hydro: ${hydroPercentage.toFixed(1)}% of total generation
+
+Line Chart Trends:
+- Solar trend: ${solarTrend > 0 ? 'increasing' : solarTrend < 0 ? 'decreasing' : 'stable'}
+- Wind trend: ${windTrend > 0 ? 'increasing' : windTrend < 0 ? 'decreasing' : 'stable'}
+- Hydro trend: ${hydroTrend > 0 ? 'increasing' : hydroTrend < 0 ? 'decreasing' : 'stable'}
+
+Provide exactly 4 key findings and 4 recommendations based on:
+1. The current distribution of energy sources (pie chart)
+2. The trends in generation over time (line charts)
+3. The balance between different energy sources
+
+Format your response as a valid JSON object with this exact structure:
+{
+  "keyFindings": [
+    "finding1",
+    "finding2",
+    "finding3",
+    "finding4"
+  ],
+  "recommendations": [
+    "recommendation1",
+    "recommendation2",
+    "recommendation3",
+    "recommendation4"
+  ]
+}
+
+Focus on:
+- Distribution analysis from pie chart
+- Trend analysis from line charts
+- Balance between energy sources
+- Opportunities for optimization
+
+Do not include any other text or formatting. Only return the JSON object.`;
+
+        const groqResponse = await groq.chat.completions.create({
+          messages: [
+            {
+              role: "system",
+              content: "You are an expert energy analyst specializing in renewable energy systems. Analyze energy distribution and trends to provide actionable insights. Always respond with valid JSON only."
+            },
+            {
+              role: "user",
+              content: prompt
+            }
+          ],
+          model: "llama-3.3-70b-versatile",
+          temperature: 0.3,
+          max_tokens: 500,
+        });
+
+        if (!groqResponse || !groqResponse.choices || !groqResponse.choices[0]?.message?.content) {
+          throw new Error("Invalid response from Groq API");
+        }
+
+        const content = groqResponse.choices[0].message.content;
+        let analysis;
+        
+        try {
+          // Try to parse the response directly
+          analysis = JSON.parse(content);
+        } catch (parseError) {
+          console.error("Initial JSON parse error:", parseError);
+          // If direct parsing fails, try to extract JSON from the response
+          const jsonMatch = content.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            analysis = JSON.parse(jsonMatch[0]);
+          } else {
+            throw new Error("Could not parse JSON from response");
+          }
+        }
+
+        // Validate the structure
+        if (!analysis.keyFindings || !analysis.recommendations) {
+          throw new Error("Invalid response structure");
+        }
+
+        setDashboardAnalysis(analysis);
+      } catch (error) {
+        console.error("Error generating insights:", error);
+        setDashboardAnalysis({
+          keyFindings: [
+            "Error generating insights. Please try again later.",
+            "Unable to analyze data patterns.",
+            "Recommendations unavailable."
+          ],
+          recommendations: [
+            "Unable to generate optimization suggestions.",
+            "Please refresh the page to try again.",
+            "Contact support if the issue persists."
+          ]
+        });
+      }
+    }
+
+    if (data.solar_gen && data.wind_gen && data.hydro_gen) {
+      generateDynamicInsights();
+    }
+  }, [data]);
 
   const buttonStyle = (position) => ({
     position: "absolute",
-    [position]: 10,
     top: "50%",
     transform: "translateY(-50%)",
-    zIndex: 15,
+    [position]: "10px",
+    zIndex: 10,
+    backgroundColor: "white",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+    border: `1px solid ${BRAND_COLORS.primary}20`,
     width: "40px",
     height: "40px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    background: `rgba(255, 255, 255, 0.9)`,
-    boxShadow: `0 4px 12px rgba(0, 48, 146, 0.15)`,
-    border: `1px solid ${BRAND_COLORS.secondary}15`,
-    borderRadius: "50%",
     transition: "all 0.3s ease",
-    ":hover": {
-      background: `${BRAND_COLORS.background}`,
-      transform: "translateY(-50%) scale(1.05)",
+    "&:hover": {
+      backgroundColor: BRAND_COLORS.primary,
+      color: "white",
+      transform: "translateY(-50%)",
     },
   });
 
-  const lineVariants = {
-    hidden: { pathLength: 0, opacity: 0 },
-    visible: {
-      pathLength: 1,
-      opacity: 1,
-      transition: {
-        pathLength: { duration: 1.5, ease: "easeInOut" },
-        opacity: { duration: 0.5 },
-      },
-    },
+  const CustomLineChart = ({ color, dataKey = "solar_gen", data, title, animationEnabled = true }) => {
+    // Format current date to match data format
+    const currentDate = new Date().toISOString().split('T')[0];
+
+    return (
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart
+          data={data}
+          margin={{
+            top: 20,
+            right: 50,
+            left: 50,
+            bottom: 20,
+          }}
+        >
+          <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" />
+          <XAxis 
+            dataKey="date"
+            tickFormatter={(date) => new Date(date).toLocaleDateString()}
+            tick={{ fill: BRAND_COLORS.primary }} 
+            axisLine={{ stroke: BRAND_COLORS.primary, strokeWidth: 1.5 }} 
+            label={{ value: "Date", position: "bottom", offset: 0 }} 
+          />
+          <YAxis 
+            domain={[0, 1]}
+            ticks={[0, 0.2, 0.4, 0.6, 0.8, 1]}
+            tick={{ fill: BRAND_COLORS.primary }} 
+            axisLine={{ stroke: BRAND_COLORS.primary, strokeWidth: 1.5 }} 
+            label={{ value: `${title} Generation`, angle: -90, position: "insideLeft" }} 
+          />
+          <Tooltip 
+            contentStyle={{ backgroundColor: "white", boxShadow: "0 4px 12px rgba(0,0,0,0.15)", border: "none", borderRadius: "8px" }} 
+            labelStyle={{ color: BRAND_COLORS.primary, fontWeight: "bold" }} 
+            formatter={(value) => [`${value.toFixed(3)} MW`, `${title} Generation`]} 
+            labelFormatter={(date) => new Date(date).toLocaleDateString()} 
+          />
+          <Legend iconType="circle" iconSize={10} wrapperStyle={{ paddingTop: 20 }} />
+          <ReferenceLine
+            x={currentDate}
+            stroke="#FF4D4F"
+            strokeWidth={2}
+            strokeDasharray="3 3"
+            label={{
+              value: "Present",
+              position: "top",
+              fill: "#FF4D4F",
+              fontSize: 12,
+              fontWeight: "bold"
+            }}
+          />
+          <Line 
+            name={`${title} Generation`}
+            dataKey={dataKey} 
+            type="monotone" 
+            stroke={color} 
+            strokeWidth={3} 
+            isAnimationActive={animationEnabled} 
+            animationDuration={1500} 
+            activeDot={{ r: 8, fill: color, strokeWidth: 2, stroke: "#FFFFFF" }} 
+            dot={{ r: 5, fill: color, stroke: "#FFFFFF", strokeWidth: 2 }} 
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    );
   };
 
-  const pieVariants = {
+  const cardStyle = {
+    background: `linear-gradient(135deg, #FFFFFF, ${BRAND_COLORS.background})`,
     hidden: { scale: 0.8, opacity: 0 },
     visible: {
       scale: 1,
@@ -405,6 +565,11 @@ export function Component() {
 
   return (
     <div style={{ padding: "16px", background: BRAND_COLORS.background, minHeight: "100vh" }}>
+      {locationData.cityName && (
+        <Typography.Title level={2} style={{ color: BRAND_COLORS.primary, marginBottom: "24px" }}>
+          Dashboard for {locationData.cityName}
+        </Typography.Title>
+      )}
       <div style={{ maxWidth: "100%", margin: "0 auto", position: "relative", borderRadius: "16px", zIndex: 5 }}>
         <Carousel
           ref={carouselRef}

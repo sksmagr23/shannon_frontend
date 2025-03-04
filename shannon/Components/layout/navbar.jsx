@@ -62,13 +62,14 @@ const Navbar = () => {
             <div className="hidden md:flex items-center space-x-8">
               {user ? (
                 <>
-                  <Link
+                  {/* <Link
                     href="/dashboard"
                     className="text-[#FFF2DB] hover:text-[#FFAB5B] transition-all duration-300 ease-in-out relative group py-2 filter drop-shadow-[0_2px_4px_rgba(255,242,219,0.1)]"
                   >
                     Dashboard
                     <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-[#FFAB5B] to-[#FFF2DB] group-hover:w-full transition-all duration-300 ease-in-out"></span>
-                  </Link>
+
+</Link> */}
                   <Link
                     href="/map"
                     className="text-[#FFF2DB] hover:text-[#FFAB5B] transition-all duration-300 ease-in-out relative group py-2 filter drop-shadow-[0_2px_4px_rgba(255,242,219,0.1)]"
@@ -138,12 +139,12 @@ const Navbar = () => {
                     />
                     <span className="text-[#FFF2DB]">{user.name || 'User'}</span>
                   </div>
-                  <Link
+                  {/* <Link
                     href="/dashboard"
                     className="block text-[#FFF2DB] hover:text-[#FFAB5B] hover:bg-[#00879E]/10 py-3 px-4 rounded-md transition-all duration-300 ease-in-out mb-2"
                   >
                     Dashboard
-                  </Link>
+                  </Link> */}
                   <Link
                     href="/map"
                     className="block text-[#FFF2DB] hover:text-[#FFAB5B] hover:bg-[#00879E]/10 py-3 px-4 rounded-md transition-all duration-300 ease-in-out mb-2"
