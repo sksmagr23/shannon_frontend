@@ -54,7 +54,7 @@ const MapComponent = ({ center, onLocationClick }) => {
     if (map.current) return;
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/dark-v11',
+      style: 'mapbox://styles/mapbox/satellite-streets-v12',
       center: [center.lng, center.lat],
       zoom: 9
     });
