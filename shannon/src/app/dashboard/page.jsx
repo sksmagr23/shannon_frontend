@@ -664,35 +664,20 @@ Do not include any other text or formatting. Only return the JSON object.`;
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={[
+                      data={data.solar_gen && data.wind_gen && data.hydro_gen ? [
                         {
                           name: "Solar",
-                          value: data.solar_gen ? 
-                            (data.solar_gen.reduce((sum, val) => sum + val, 0) / 
-                              (data.solar_gen.reduce((sum, val) => sum + val, 0) +
-                               data.wind_gen.reduce((sum, val) => sum + val, 0) +
-                               data.hydro_gen.reduce((sum, val) => sum + val, 0)) * 100
-                            ).toFixed(1) : 0.0,
+                          value: data.solar_gen.reduce((sum, val) => sum + val, 0)
                         },
                         {
                           name: "Wind",
-                          value: data.wind_gen ? 
-                            (data.wind_gen.reduce((sum, val) => sum + val, 0) / 
-                              (data.solar_gen.reduce((sum, val) => sum + val, 0) +
-                               data.wind_gen.reduce((sum, val) => sum + val, 0) +
-                               data.hydro_gen.reduce((sum, val) => sum + val, 0)) * 100
-                            ).toFixed(1) : 0.0,
+                          value: data.wind_gen.reduce((sum, val) => sum + val, 0)
                         },
                         {
                           name: "Hydro",
-                          value: data.hydro_gen ? 
-                            (data.hydro_gen.reduce((sum, val) => sum + val, 0) / 
-                              (data.solar_gen.reduce((sum, val) => sum + val, 0) +
-                               data.wind_gen.reduce((sum, val) => sum + val, 0) +
-                               data.hydro_gen.reduce((sum, val) => sum + val, 0)) * 100
-                            ).toFixed(1) : 0.0,
-                        },
-                      ]}
+                          value: data.hydro_gen.reduce((sum, val) => sum + val, 0)
+                        }
+                      ] : powerGenData}
                       dataKey="value"
                       nameKey="name"
                       cx="50%"
@@ -700,11 +685,24 @@ Do not include any other text or formatting. Only return the JSON object.`;
                       outerRadius={160}
                       innerRadius={80}
                       paddingAngle={5}
-                      label={({ name, percent }) =>
-                        `${name} ${(percent * 100).toFixed(0)}%`
+                      label={({ name, value, percent }) =>
+                        `${name}: ${(percent * 100).toFixed(0)}%`
                       }
                     >
-                      {powerGenData.map((entry, index) => (
+                      {(data.solar_gen && data.wind_gen && data.hydro_gen ? [
+                        {
+                          name: "Solar",
+                          value: data.solar_gen.reduce((sum, val) => sum + val, 0)
+                        },
+                        {
+                          name: "Wind",
+                          value: data.wind_gen.reduce((sum, val) => sum + val, 0)
+                        },
+                        {
+                          name: "Hydro",
+                          value: data.hydro_gen.reduce((sum, val) => sum + val, 0)
+                        }
+                      ] : powerGenData).map((entry, index) => (
                         <Cell
                           key={`cell-${index}`}
                           fill={COLORS[index % COLORS.length]}
