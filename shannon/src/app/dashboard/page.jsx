@@ -100,7 +100,6 @@ export function Component() {
   });
 
   useEffect(() => {
-    // Get location data from URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     const lat = urlParams.get('lat');
     const lng = urlParams.get('lng'); 
@@ -113,7 +112,7 @@ export function Component() {
         cityName: cityName
       });
     }
-  }, [searchParams]);
+  }, []);
 
   const [SolarData, setSolarData] = useState([]);
   const [Wind, setWind] = useState([]);
