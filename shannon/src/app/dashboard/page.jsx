@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { Card, Typography, Carousel, Button, Table } from "antd";
 import { motion } from "framer-motion";
 import Groq from "groq-sdk";
-import { useSearchParams } from 'next/navigation';
 
 const groq = new Groq({
   apiKey: process.env.NEXT_PUBLIC_GROQ_API_KEY,
@@ -94,7 +93,6 @@ const COLORS = [
 ];
 
 export function Component() {
-  const searchParams = useSearchParams();
   const [locationData, setLocationData] = useState({
     lat: null,
     lng: null,
@@ -103,9 +101,10 @@ export function Component() {
 
   useEffect(() => {
     // Get location data from URL parameters
-    const lat = searchParams.get('lat');
-    const lng = searchParams.get('lng');
-    const cityName = searchParams.get('cityName');
+    const urlParams = new URLSearchParams(window.location.search);
+    const lat = urlParams.get('lat');
+    const lng = urlParams.get('lng'); 
+    const cityName = urlParams.get('cityName');
     
     if (lat && lng && cityName) {
       setLocationData({
