@@ -3,6 +3,8 @@ import "./globals.css";
 import 'antd/dist/reset.css';
 import Navbar from "../../Components/layout/navbar";
 import { Montserrat } from 'next/font/google';
+import SessionWrapper from "../../Components/Session-Wrapper/SessionWrapper";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,12 +30,14 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <Navbar />
-        {children}
-      </body>
+      <SessionWrapper>
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        >
+          <Navbar />
+          {children}
+        </body>
+      </SessionWrapper>
     </html>
   );
 }
