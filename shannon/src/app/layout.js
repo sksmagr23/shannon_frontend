@@ -1,6 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import 'antd/dist/reset.css';
+import 'antd/dist/antd.css';
 import Navbar from "../../Components/layout/navbar";
 import { Montserrat } from 'next/font/google';
 import SessionWrapper from "../../Components/Session-Wrapper/SessionWrapper";
