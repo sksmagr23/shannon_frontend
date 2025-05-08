@@ -3,45 +3,21 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import SignInModal from "../signIn/signIn";
-import { useEffect } from "react";
-import toast from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
-import { Toaster } from 'react-hot-toast';
+import { useSession, signOut } from "next-auth/react";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [showSignInModal, setShowSignInModal] = useState(false);
-  const [user, setUser] = useState(null);
+  const { data: session, status } = useSession();
   const router = useRouter();
 
-  const checkUserStatus = () => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
-      setShowSignInModal(false)
-    } else {
-      setUser(null);
-    }
+  const handleLogout = async () => {
+    await signOut({ callbackUrl: '/' });
   };
 
-  useEffect(() => {
-    checkUserStatus();
-    window.addEventListener('storage', checkUserStatus);
-    window.addEventListener('userStateChange', checkUserStatus);
-
-    return () => {
-      window.removeEventListener('storage', checkUserStatus);
-      window.removeEventListener('userStateChange', checkUserStatus);
-    };
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
-    toast.success('Logged out successfully 👋');
-    window.dispatchEvent(new Event('userStateChange'));
-    router.push('/');
-  };
+  const user = session?.user;
 
   return (
     <>
@@ -62,14 +38,6 @@ const Navbar = () => {
             <div className="hidden md:flex items-center space-x-8">
               {user ? (
                 <>
-                  {/* <Link
-                    href="/dashboard"
-                    className="text-[#FFF2DB] hover:text-[#FFAB5B] transition-all duration-300 ease-in-out relative group py-2 filter drop-shadow-[0_2px_4px_rgba(255,242,219,0.1)]"
-                  >
-                    Dashboard
-                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-[#FFAB5B] to-[#FFF2DB] group-hover:w-full transition-all duration-300 ease-in-out"></span>
-
-</Link> */}
                   <Link
                     href="/map"
                     className="text-[#FFF2DB] hover:text-[#FFAB5B] transition-all duration-300 ease-in-out relative group py-2 filter drop-shadow-[0_2px_4px_rgba(255,242,219,0.1)]"
@@ -79,7 +47,7 @@ const Navbar = () => {
                   </Link>
                   <div className="flex items-center space-x-4">
                     <img
-                      src="/dafault-avatar.png"
+                      src={user.image || "/dafault-avatar.png"}
                       alt="User Avatar"
                       className="h-8 w-8 rounded-full"
                     />
@@ -133,18 +101,12 @@ const Navbar = () => {
                 <>
                   <div className="flex items-center space-x-3 mb-4 px-4">
                     <img
-                      src="/dafault-avatar.png"
+                      src={user.image || "/dafault-avatar.png"}
                       alt="User Avatar"
                       className="h-8 w-8 rounded-full"
                     />
                     <span className="text-[#FFF2DB]">{user.name || 'User'}</span>
                   </div>
-                  {/* <Link
-                    href="/dashboard"
-                    className="block text-[#FFF2DB] hover:text-[#FFAB5B] hover:bg-[#00879E]/10 py-3 px-4 rounded-md transition-all duration-300 ease-in-out mb-2"
-                  >
-                    Dashboard
-                  </Link> */}
                   <Link
                     href="/map"
                     className="block text-[#FFF2DB] hover:text-[#FFAB5B] hover:bg-[#00879E]/10 py-3 px-4 rounded-md transition-all duration-300 ease-in-out mb-2"
