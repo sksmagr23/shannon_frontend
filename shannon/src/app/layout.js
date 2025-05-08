@@ -4,6 +4,7 @@ import 'antd/dist/reset.css';
 import Navbar from "../../Components/layout/navbar";
 import { Montserrat } from 'next/font/google';
 import SessionWrapper from "../../Components/Session-Wrapper/SessionWrapper";
+import BodyWrapper from "../../Components/Body-Wrapper/bodywrapper";
 
 
 const geistSans = Geist({
@@ -31,11 +32,11 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <SessionWrapper>
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        >
-          <Navbar />
-          {children}
+        <body suppressHydrationWarning={true}>
+          <BodyWrapper className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+            <Navbar />
+            {children}
+          </BodyWrapper>
         </body>
       </SessionWrapper>
     </html>

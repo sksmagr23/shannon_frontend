@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import SignInModal from "../signIn/signIn";
+import SignInModal from "../signIn/signIn.jsx";
 import toast, { Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { useSession, signOut } from "next-auth/react";
