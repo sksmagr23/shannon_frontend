@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import toast, { Toaster } from "react-hot-toast";
 
 const SignInModal = ({ isOpen, onClose, onBack }) => {
-  if (!isOpen) return null;
   const router = useRouter();
   const { data: session } = useSession();
+  if(!isOpen) return null;
 
   const handleSignIn = async (provider) => {
     try {

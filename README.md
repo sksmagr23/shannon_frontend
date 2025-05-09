@@ -9,7 +9,7 @@ A Next.js based web application for predicting and visualizing renewable energy 
 - Interactive MapboxGL integration for location selection and Reverse geocoding for city name lookup.
 - Real-time data visualization using Recharts
 - Modern UI with Ant Design and Framer Motion animations
-- Google Authentication using Firebase.
+- Authentication with Google and github using next-auth
 - Fully responsive design
 - Real-time data updates and predictions on Dashboard
 
@@ -23,7 +23,7 @@ A Next.js based web application for predicting and visualizing renewable energy 
   - Framer Motion
 - **Maps**: MapboxGL
 - **Charts**: Recharts
-- **Authentication**: Firebase
+- **Authentication**: Next-auth
 - **API Integration**: Axios
 - **AI Integration**: Groq SDK
 
